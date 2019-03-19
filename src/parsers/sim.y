@@ -14,9 +14,10 @@
 %token DIV J JR LUI
 %token MADD MFHI MFLO MOVN MOVZ MSUB MTHI MTLO MUL MULT
 %token NOP NOR OR ORI SUB SYSCALL XOR XORI
+%token IMMEDIATE
 
 %token REG COMMA NEWLINE
-%token IMMEDIATE
+%token END_FILE 0
 
 %start program
 
@@ -27,11 +28,12 @@ program:
 
 instruction_list:
   instruction
-  |instruction_list instruction
+  |instruction instruction_list
 ;
 
 instruction:
   command NEWLINE
+  |command END_FILE
   |NEWLINE
 ;
 
@@ -134,7 +136,7 @@ int main(int argc, char** argv){
     yyin = fopen(argv[1], "r");
 
     if(!yyin){
-      printf("Can't open \'%s\' input file", argv[1]);
+      printf("Can't open \'%s\' input file\n", argv[1]);
 
       return 1;
     }
@@ -143,6 +145,7 @@ int main(int argc, char** argv){
   yyparse();
 
   fclose(yyin);
+  printf("Num: %d\n", yylineno);
 
   return 0;
 }

@@ -73,7 +73,7 @@
 
 [ \t]
 "#".*
-
+<<EOF>> {printf("a\n");return END_FILE;}
 . {lexicalError(yytext);}
 
 %%

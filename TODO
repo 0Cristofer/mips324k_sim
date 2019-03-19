@@ -1,6 +1,9 @@
 TODO:
     - Ver tipos de binários para as instruções
     - Ver diferença entre imediato e offset
+    - Trocar offsets por labels
+    - Implementar labels
+    - Programa é um vetor de inteiros
 
 Tipos:
     - Totalmente à direita (todos com apenas registradores e syscall)
