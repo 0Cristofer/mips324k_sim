@@ -1,27 +1,37 @@
-/* Mips32 4K simulator assembly translator
-   Authors: Bruno Cesar, Cristofer Oswald and Narcizo Gabriel
-   Created: 9/9/2018
-   Edited: 18/10/2018 */
+/* Mips32 4K simulator assembly translator syntax
+   Author: Cristofer Oswald
+   Created: 17/03/2019
+   Edited: 19/03/2019 */
 
 %{
-  #include <stdio.h>
-
-  #include "src/include/parser.h"
+  #include "src/parsers/include/parser.h"
 %}
+
+%union{
+  int code;
+}
 
 %token ADD ADDI AND ANDI
 %token B BEQ BEQL BGEZ BGTZ BLEZ BLTZ BNE
 %token DIV J JR LUI
 %token MADD MFHI MFLO MOVN MOVZ MSUB MTHI MTLO MUL MULT
 %token NOP NOR OR ORI SUB SYSCALL XOR XORI
-%token IMMEDIATE
 
-%token REG COMMA NEWLINE
+%token REG LABEL IMMEDIATE
+
+%token COMMA COLON NEWLINE
 %token END_FILE 0
+
+%type <code> three_reg two_reg one_reg
+%type <code> two_reg_imm one_reg_imm
+%type <code> two_reg_label one_reg_label one_label
+%type <code> nop syscall
+%type <code> reg immediate label_use
 
 %start program
 
 %%
+
 program:
   instruction_list
 ;
@@ -34,6 +44,10 @@ instruction_list:
 instruction:
   command NEWLINE
   |command END_FILE
+  |label command NEWLINE
+  |label command END_FILE
+  |label NEWLINE
+  |label END_FILE
   |NEWLINE
 ;
 
@@ -43,109 +57,127 @@ command:
   |one_reg_inst
   |two_reg_imm_inst
   |one_reg_imm_inst
-  |j
-  |nop
-  |syscall
+  |two_reg_label_inst
+  |one_reg_label_inst
+  |one_label_inst
+  |other_inst
 ;
 
 three_reg:
-  ADD
-  |AND
-  |MOVN
-  |MOVZ
-  |MUL
-  |NOR
-  |OR
-  |SUB
-  |XOR
+  ADD   {$$ = yylval.code;}
+  |AND  {$$ = yylval.code;}
+  |MOVN {$$ = yylval.code;}
+  |MOVZ {$$ = yylval.code;}
+  |MUL  {$$ = yylval.code;}
+  |NOR  {$$ = yylval.code;}
+  |OR   {$$ = yylval.code;}
+  |SUB  {$$ = yylval.code;}
+  |XOR  {$$ = yylval.code;}
 ;
 
 three_reg_inst:
-  three_reg REG COMMA REG COMMA REG
+  three_reg reg COMMA reg COMMA reg {add3RegIns($1, $2, $4, $6);}
 ;
 
 two_reg:
-  DIV
-  |MADD
-  |MSUB
-  |MULT
+  DIV   {$$ = yylval.code;}
+  |MADD {$$ = yylval.code;}
+  |MSUB {$$ = yylval.code;}
+  |MULT {$$ = yylval.code;}
 ;
 
 two_reg_inst:
-  two_reg REG COMMA REG
+  two_reg reg COMMA reg {add2RegIns($1, $2, $4);}
 ;
 
 one_reg:
-  MFHI
-  |MFLO
-  |MTHI
-  |MTLO
+  JR    {$$ = yylval.code;}
+  |MFHI {$$ = yylval.code;}
+  |MFLO {$$ = yylval.code;}
+  |MTHI {$$ = yylval.code;}
+  |MTLO {$$ = yylval.code;}
 ;
 
 one_reg_inst:
-  one_reg REG
+  one_reg reg {add1RegIns($1, $2);}
 ;
 
 two_reg_imm:
-  ADDI
-  |ANDI
-  |BEQ
-  |BEQL
-  |BNE
-  |ORI
-  |XORI
+  ADDI  {$$ = yylval.code;}
+  |ANDI {$$ = yylval.code;}
+  |ORI  {$$ = yylval.code;}
+  |XORI {$$ = yylval.code;}
 ;
 
 two_reg_imm_inst:
-  two_reg_imm REG COMMA REG COMMA IMMEDIATE
+  two_reg_imm reg COMMA reg COMMA immediate {add2RegImmIns($1, $2, $4, $6);}
 ;
 
 one_reg_imm:
-  BGEZ
-  |BGTZ
-  |BLEZ
-  |BLTZ
-  |LUI
+  LUI {$$ = yylval.code;}
 ;
 
 one_reg_imm_inst:
-  one_reg_imm REG COMMA IMMEDIATE
+  one_reg_imm reg COMMA immediate {add1RegImmIns($1, $2, $4);}
 ;
 
-j:
-  J IMMEDIATE
+two_reg_label:
+  BEQ   {$$ = yylval.code;}
+  |BEQL {$$ = yylval.code;}
+  |BNE  {$$ = yylval.code;}
+;
+
+two_reg_label_inst:
+  two_reg_label reg COMMA reg COMMA label_use {add2RegOffsetIns($1, $2, $4, $6);}
+;
+
+one_reg_label:
+  BGEZ  {$$ = yylval.code;}
+  |BGTZ {$$ = yylval.code;}
+  |BLEZ {$$ = yylval.code;}
+  |BLTZ {$$ = yylval.code;}
+;
+
+one_reg_label_inst:
+  one_reg_label reg COMMA label_use {add1RegOffsetIns($1, $2, $4);}
+;
+
+one_label:
+  B   {$$ = yylval.code;}
+  |J  {$$ = yylval.code;}
+;
+
+one_label_inst:
+  one_label label_use {addOffsetIns($1, $2);}
+;
+
+other_inst:
+  nop {add3RegIns($1, 0, 0, 0);}
+  |syscall {add3RegIns($1, 0, 0, 0);}
+;
 
 nop:
-  NOP
+  NOP {$$ = yylval.code;}
 ;
 
 syscall:
-  SYSCALL
+  SYSCALL {$$ = yylval.code;}
+;
+
+reg:
+  REG {$$ = yylval.code;}
+;
+
+immediate:
+  IMMEDIATE {$$ = yylval.code;}
+;
+
+label:
+  LABEL COLON
+;
+
+label_use:
+  LABEL {$$ = 1;}
 ;
 
 %%
-
-int main(int argc, char** argv){
-
-  if(argc != 2){
-    printf("Invalid arguments, use: \'mips324k_sim input_file.s\'\n");
-
-    return 1;
-  }
-  else{
-    yyin = fopen(argv[1], "r");
-
-    if(!yyin){
-      printf("Can't open \'%s\' input file\n", argv[1]);
-
-      return 1;
-    }
-  }
-
-  yyparse();
-
-  fclose(yyin);
-  printf("Num: %d\n", yylineno);
-
-  return 0;
-}
