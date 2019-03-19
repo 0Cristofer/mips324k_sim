@@ -1,0 +1,9 @@
+TODO:
+    - Ver tipos de binários para as instruções
+    - Ver diferença entre imediato e offset
+
+Tipos:
+    - Totalmente à direita (todos com apenas registradores e syscall)
+    - Totalmente à esquerda (todos com imediato menos bgez/bltz)
+    - No meio (entre bts 16 e 20) (bgez/bltz)
+    - nop = 0
