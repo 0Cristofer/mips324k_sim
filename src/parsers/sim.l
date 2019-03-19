@@ -18,14 +18,61 @@
 
 %%
 
-"add"    {return ADD;}
-"$t"[0-7] {return REG;}
+"add"      {return ADD;}
+"addi"     {return ADDI;}
+"and"      {return AND;}
+"andi"     {return ANDI;}
+"b"        {return B;}
+"beq"      {return BEQ;}
+"beql"     {return BEQL;}
+"bgez"     {return BGEZ;}
+"bgtz"     {return BGTZ;}
+"blez"     {return BLEZ;}
+"bltz"     {return BLTZ;}
+"bne"      {return BNE;}
+"div"      {return DIV;}
+"j"        {return J;}
+"jr"       {return JR;}
+"lui"      {return LUI;}
+"madd"     {return MADD;}
+"mfhi"     {return MFHI;}
+"mflo"     {return MFLO;}
+"movn"     {return MOVN;}
+"movz"     {return MOVZ;}
+"msub"     {return MSUB;}
+"mthi"     {return MTHI;}
+"mtlo"     {return MTLO;}
+"mul"      {return MUL;}
+"mult"     {return MULT;}
+"nop"      {return NOP;}
+"nor"      {return NOR;}
+"or"       {return OR;}
+"ori"      {return ORI;}
+"sub"      {return SUB;}
+"syscall"  {return SYSCALL;}
+"xor"      {return XOR;}
+"xori"     {return XORI;}
 
-","      {return COMMA;}
 
-"\n" {yylineno = yylineno + 1;}
+"$zero"       {return REG;}
+"$at"         {return REG;}
+"$v"[0-1]     {return REG;}
+"$a"[0-3]     {return REG;}
+"$t"[0-9]     {return REG;}
+"$s"[0-7]     {return REG;}
+"$k"[0-1]     {return REG;}
+"$gp"         {return REG;}
+"$sp"         {return REG;}
+"$fp"|"$s8"   {return REG;}
+"$ra"         {return REG;}
+
+[0-9]+        {return IMMEDIATE;}
+
+","           {return COMMA;}
+"\n"          {yylineno = yylineno + 1; return NEWLINE;}
+
 [ \t]
-"//".*
+"#".*
 
 . {lexicalError(yytext);}
 

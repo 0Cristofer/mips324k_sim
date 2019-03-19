@@ -9,7 +9,14 @@
   #include "src/include/parser.h"
 %}
 
-%token ADD REG COMMA
+%token ADD ADDI AND ANDI
+%token B BEQ BEQL BGEZ BGTZ BLEZ BLTZ BNE
+%token DIV J JR LUI
+%token MADD MFHI MFLO MOVN MOVZ MSUB MTHI MTLO MUL MULT
+%token NOP NOR OR ORI SUB SYSCALL XOR XORI
+
+%token REG COMMA NEWLINE
+%token IMMEDIATE
 
 %start program
 
@@ -24,11 +31,95 @@ instruction_list:
 ;
 
 instruction:
-  add
+  command NEWLINE
+  |NEWLINE
 ;
 
-add:
-  ADD REG COMMA REG COMMA REG;
+command:
+  three_reg_inst
+  |two_reg_inst
+  |one_reg_inst
+  |two_reg_imm_inst
+  |one_reg_imm_inst
+  |j
+  |nop
+  |syscall
+;
+
+three_reg:
+  ADD
+  |AND
+  |MOVN
+  |MOVZ
+  |MUL
+  |NOR
+  |OR
+  |SUB
+  |XOR
+;
+
+three_reg_inst:
+  three_reg REG COMMA REG COMMA REG
+;
+
+two_reg:
+  DIV
+  |MADD
+  |MSUB
+  |MULT
+;
+
+two_reg_inst:
+  two_reg REG COMMA REG
+;
+
+one_reg:
+  MFHI
+  |MFLO
+  |MTHI
+  |MTLO
+;
+
+one_reg_inst:
+  one_reg REG
+;
+
+two_reg_imm:
+  ADDI
+  |ANDI
+  |BEQ
+  |BEQL
+  |BNE
+  |ORI
+  |XORI
+;
+
+two_reg_imm_inst:
+  two_reg_imm REG COMMA REG COMMA IMMEDIATE
+;
+
+one_reg_imm:
+  BGEZ
+  |BGTZ
+  |BLEZ
+  |BLTZ
+  |LUI
+;
+
+one_reg_imm_inst:
+  one_reg_imm REG COMMA IMMEDIATE
+;
+
+j:
+  J IMMEDIATE
+
+nop:
+  NOP
+;
+
+syscall:
+  SYSCALL
+;
 
 %%
 
