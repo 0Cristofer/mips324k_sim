@@ -1,7 +1,7 @@
 TODO:
-    - Fazer verificação de labels
-    - Organizar arquivos, documentação
     - Leitura de opções/argumentos
+    - Fazer arquivo de saída do binário
+    - Fazer arquivo de saída final
 
 Problemas:
     - Offset shift (18bits)

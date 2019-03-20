@@ -1,7 +1,7 @@
 /* Mips32 4K simulator assembly translator syntax
    Author: Cristofer Oswald
    Created: 17/03/2019
-   Edited: 19/03/2019 */
+   Edited: 20/03/2019 */
 
 %{
   #include "src/parsers/include/parser.h"
@@ -9,6 +9,7 @@
 
 %union{
   int code;
+  char *text;
 }
 
 %token ADD ADDI AND ANDI
@@ -26,14 +27,14 @@
 %type <code> two_reg_imm one_reg_imm
 %type <code> two_reg_label one_reg_label one_label
 %type <code> nop syscall
-%type <code> reg immediate label_use
+%type <code> reg immediate
 
 %start program
 
 %%
 
 program:
-  instruction_list
+  instruction_list {endParse();}
 ;
 
 instruction_list:
@@ -128,7 +129,7 @@ two_reg_label:
 ;
 
 two_reg_label_inst:
-  two_reg_label reg COMMA reg COMMA label_use {add2RegOffsetIns($1, $2, $4, $6);}
+  two_reg_label reg COMMA reg COMMA label_use {add2RegOffsetIns($1, $2, $4);}
 ;
 
 one_reg_label:
@@ -139,7 +140,7 @@ one_reg_label:
 ;
 
 one_reg_label_inst:
-  one_reg_label reg COMMA label_use {add1RegOffsetIns($1, $2, $4);}
+  one_reg_label reg COMMA label_use {add1RegOffsetIns($1, $2);}
 ;
 
 one_label:
@@ -148,7 +149,7 @@ one_label:
 ;
 
 one_label_inst:
-  one_label label_use {addOffsetIns($1, $2);}
+  one_label label_use {addOffsetIns($1);}
 ;
 
 other_inst:
@@ -173,11 +174,11 @@ immediate:
 ;
 
 label:
-  LABEL COLON
+  LABEL COLON {if(!newLabel(yylval.text)) YYABORT;}
 ;
 
 label_use:
-  LABEL {$$ = 1;}
+  LABEL {useLabel(yylval.text);}
 ;
 
 %%

@@ -1,17 +1,19 @@
 /* Mips32 4K simulator assembly translator lexer
    Author: Cristofer Oswald
    Created: 17/03/2019
-   Edited: 19/03/2019 */
+   Edited: 20/03/2019 */
 
 %option noyywrap nodefault
 
 %{
   #include <stdio.h>
+  #include <string.h>
 
   #include "src/parsers/include/parser.h"
   #include "sim.tab.h"
 
   int yylineno = 1;
+  int yyleng = 0;
 
   void lexicalError(char *s);
 %}
@@ -54,7 +56,7 @@
 "xori"     {yylval.code = 939524096; return XORI;}
 
 
-"$zero"       {yylval.code = 0; return REG;}
+"$zero"|"$0"      {yylval.code = 0; return REG;}
 "$at"         {yylval.code = 1; return REG;}
 "$v"[0-1]     {yylval.code = 2+atoi(yytext+2); return REG;}
 "$a"[0-3]     {yylval.code = 4+atoi(yytext+2); return REG;}
@@ -76,7 +78,11 @@
 [ \t]
 "#".*
 
-([a-zA-Z]|_)([a-zA-Z]|_|[0-9])* {return LABEL;}
+([a-zA-Z]|_)([a-zA-Z]|_|[0-9])* {
+                                  yylval.text = malloc(sizeof(char) * (yyleng + 1));
+                                  strcpy(yylval.text, yytext);
+                                  return LABEL;
+                                }
 
 <<EOF>>       {return END_FILE;}
 
