@@ -1,5 +1,7 @@
 TODO:
     - Fazer verificação de labels
+    - Organizar arquivos, documentação
+    - Leitura de opções/argumentos
 
 Problemas:
     - Offset shift (18bits)
