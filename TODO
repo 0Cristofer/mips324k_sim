@@ -4,5 +4,5 @@ TODO:
     - Fazer arquivo de saída final
 
 Problemas:
-    - Offset shift (18bits)
-    - Instrução J é diferente
+    - Offset shift (18bits) - utilizar int 16
+    - Instrução J é diferente - utilizar endereço não relativo
