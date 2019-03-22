@@ -1,13 +1,13 @@
 /* Mips32 4K simulator assembly translator helper functions
    Author: Cristofer Oswald
    Created: 17/03/2019
-   Edited: 20/03/2019 */
+   Edited: 21/03/2019 */
 
 #include <string.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 #include "include/parser.h"
-#include "../include/mips324k_sim.h"
 
 int current_inst = 0;
 int inst_size = 0;
@@ -18,102 +18,158 @@ int label_defs_size = 0;
 int current_uses = 0;
 int uses_size = 0;
 
-int realloc_step = 1024;
+int inst_lines_size = 0;
+int current_line = 0;
 
 label_use_t *label_uses = NULL;
 label_def_t *label_defs = NULL;
+unsigned int *instructions = NULL;
+int *inst_lines = NULL;
 
+int realloc_step = 1024;
+
+int ok = 1;
+
+int parseInput(char *file_name, int *n_inst, unsigned int **insts, char ***insts_strs){
+    int i, j;
+    char *line = NULL;
+    size_t len = 0;
+
+    yyin = fopen(file_name, "r");
+
+    if(!yyin) {
+        printf("Can't open input file '%s'\n", file_name);
+        return 0;
+    }
+
+    yyparse();
+
+    /* Reads the instruction lines */
+
+    rewind(yyin);
+    *insts_strs = malloc(sizeof(char *) * current_line);
+
+    i = 1;
+    j = 0;
+    while(getline(&line, &len, yyin) != -1){
+
+        if(i == inst_lines[j]) {
+            (*insts_strs)[j] = malloc(sizeof(char) * (len+1));
+            strcpy((*insts_strs)[j], line);
+            j = j + 1;
+        }
+
+        i = i + 1;
+    }
+
+    free(line);
+    fclose(yyin);
+    free(inst_lines);
+
+    *n_inst = current_inst;
+    *insts = instructions;
+
+    return ok;
+}
+
+void addLine(int line){
+    if(current_line == inst_lines_size){
+        inst_lines = realloc(inst_lines, sizeof(int) * realloc_step);
+        inst_lines_size = inst_lines_size + realloc_step;
+    }
+
+    inst_lines[current_line] = line;
+    current_line = current_line + 1;
+}
 void addInst(){
     if(current_inst == inst_size){
-        prog_mem = realloc(prog_mem, sizeof(int) * realloc_step);
+        instructions = realloc(instructions, sizeof(unsigned int) * realloc_step);
         inst_size = inst_size + realloc_step;
     }
 }
 
-void add3RegIns(int op_code, int rd, int rs, int rt){
+void add3RegIns(unsigned int op_code, unsigned int rd, unsigned int rs, unsigned int rt){
     addInst();
 
-    rd = rd << 11;
-    rt = rt << 16;
-    rs = rs << 21;
+    rd = rd << (unsigned int)11;
+    rt = rt << (unsigned int)16;
+    rs = rs << (unsigned int)21;
 
-    prog_mem[current_inst] = rs | rt | rd | op_code;
+    instructions[current_inst] = rs | rt | rd | op_code;
 
     current_inst = current_inst + 1;
 }
 
-void add2RegIns(int op_code, int rs, int rt){
+void add2RegIns(unsigned int op_code, unsigned int rs, unsigned int rt){
     addInst();
 
-    rt = rt << 16;
-    rs = rs << 21;
+    rt = rt << (unsigned int)16;
+    rs = rs << (unsigned int)21;
 
-    prog_mem[current_inst] = rs | rt | op_code;
+    instructions[current_inst] = rs | rt | op_code;
 
     current_inst = current_inst + 1;
 }
 
-void add1RegIns(int op_code, int rd){
+void add1RegIns(unsigned int op_code, unsigned int rd){
     addInst();
 
-    if((op_code == 8) || (op_code == 17) ||(op_code == 19)) rd = rd << 21;
-    else rd = rd << 11;;
+    if((op_code == 8) || (op_code == 17) ||(op_code == 19)) rd = rd << (unsigned int)21;
+    else rd = rd << (unsigned int)11;;
 
-    prog_mem[current_inst] = rd | op_code;
-
-    current_inst = current_inst + 1;
-}
-
-
-void add2RegImmIns(int op_code, int rt, int rs, int immediate){
-    addInst();
-
-    immediate = immediate & 65535;
-    rt = rt << 16;
-    rs = rs << 21;
-
-    prog_mem[current_inst] = op_code | rs | rt | immediate;
-
-    current_inst = current_inst + 1;
-}
-
-void add1RegImmIns(int op_code, int rt, int immediate){
-    addInst();
-
-    immediate = immediate & 65535;
-    rt = rt << 16;
-
-    prog_mem[current_inst] = op_code | rt | immediate;
+    instructions[current_inst] = rd | op_code;
 
     current_inst = current_inst + 1;
 }
 
 
-void add2RegOffsetIns(int op_code, int rs, int rt) {
+void add2RegImmIns(unsigned int op_code, unsigned int rt, unsigned int rs, int16_t immediate){
     addInst();
 
-    rt = rt << 16;
-    rs = rs << 21;
+    rt = rt << (unsigned int)16;
+    rs = rs << (unsigned int)21;
 
-    prog_mem[current_inst] =  op_code | rs | rt;
+    instructions[current_inst] = op_code | rs | rt | (uint16_t)immediate;
 
     current_inst = current_inst + 1;
 }
 
-void add1RegOffsetIns(int op_code, int rs) {
+void add1RegImmIns(unsigned int op_code, unsigned int rt, int16_t immediate){
     addInst();
 
-    rs = rs << 21;
+    rt = rt << (unsigned int)16;
 
-    prog_mem[current_inst] =  op_code | rs;
+    instructions[current_inst] = op_code | rt | (uint16_t)immediate;
 
     current_inst = current_inst + 1;
 }
 
-void addOffsetIns(int op_code) {
+
+void add2RegOffsetIns(unsigned int op_code, unsigned int rs, unsigned int rt) {
     addInst();
 
-    prog_mem[current_inst] = op_code;
+    rt = rt << (unsigned int)16;
+    rs = rs << (unsigned int)21;
+
+    instructions[current_inst] =  op_code | rs | rt;
+
+    current_inst = current_inst + 1;
+}
+
+void add1RegOffsetIns(unsigned int op_code, unsigned int rs) {
+    addInst();
+
+    rs = rs << (unsigned int)21;
+
+    instructions[current_inst] =  op_code | rs;
+
+    current_inst = current_inst + 1;
+}
+
+void addOffsetIns(unsigned int op_code) {
+    addInst();
+
+    instructions[current_inst] = op_code;
 
     current_inst = current_inst + 1;
 }
@@ -200,7 +256,8 @@ int findLabel(char *label){
 }
 
 void endParse(){
-    int i, offset;
+    int i, offset32;
+    uint16_t inst1, inst2, offset16;
 
     if(ok) {
         for (i = 0; i < current_uses; i++) {
@@ -210,8 +267,19 @@ void endParse(){
                 break;
             }
 
-            offset = (label_uses[i].label->inst - label_uses[i].inst) ; // Ver truncagem 16 bits e 18 bits
-            prog_mem[label_uses[i].inst] = prog_mem[label_uses[i].inst] | offset;
+            if(instructions[label_uses[i].inst] == 134217728){
+                offset32 = ((unsigned int)label_uses[i].label->inst & (unsigned int)67108863);
+
+                instructions[label_uses[i].inst] = instructions[label_uses[i].inst] | (unsigned int)offset32;
+            }
+            else {
+                inst1 = (uint16_t) label_uses[i].label->inst;
+                inst2 = (uint16_t) label_uses[i].inst;
+
+                offset16 = inst1 - inst2;
+                instructions[label_uses[i].inst] = instructions[label_uses[i].inst] | offset16;
+            }
+
         }
     }
 

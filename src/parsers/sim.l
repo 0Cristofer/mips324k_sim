@@ -1,13 +1,14 @@
 /* Mips32 4K simulator assembly translator lexer
    Author: Cristofer Oswald
    Created: 17/03/2019
-   Edited: 20/03/2019 */
+   Edited: 21/03/2019 */
 
 %option noyywrap nodefault
 
 %{
   #include <stdio.h>
   #include <string.h>
+  #include <stdint.h>
 
   #include "src/parsers/include/parser.h"
   #include "sim.tab.h"
@@ -69,7 +70,7 @@
 "$fp"|"$s8"   {yylval.code = 30; return REG;}
 "$ra"         {yylval.code = 31; return REG;}
 
-[0-9]+        {yylval.code = atoi(yytext); return IMMEDIATE;}
+[-+]?[0-9]+        {yylval.imm = (int16_t) atoi(yytext); return IMMEDIATE;}
 
 ","           {return COMMA;}
 ":"           {return COLON;}

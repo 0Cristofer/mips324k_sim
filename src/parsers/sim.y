@@ -1,14 +1,17 @@
 /* Mips32 4K simulator assembly translator syntax
    Author: Cristofer Oswald
    Created: 17/03/2019
-   Edited: 20/03/2019 */
+   Edited: 21/03/2019 */
 
 %{
+  #include <stdint.h>
+
   #include "src/parsers/include/parser.h"
 %}
 
 %union{
-  int code;
+  unsigned int code;
+  int16_t imm;
   char *text;
 }
 
@@ -27,7 +30,8 @@
 %type <code> two_reg_imm one_reg_imm
 %type <code> two_reg_label one_reg_label one_label
 %type <code> nop syscall
-%type <code> reg immediate
+%type <code> reg
+%type <imm> immediate
 
 %start program
 
@@ -53,15 +57,15 @@ instruction:
 ;
 
 command:
-  three_reg_inst
-  |two_reg_inst
-  |one_reg_inst
-  |two_reg_imm_inst
-  |one_reg_imm_inst
-  |two_reg_label_inst
-  |one_reg_label_inst
-  |one_label_inst
-  |other_inst
+  three_reg_inst {addLine(yylineno);}
+  |two_reg_inst {addLine(yylineno);}
+  |one_reg_inst {addLine(yylineno);}
+  |two_reg_imm_inst {addLine(yylineno);}
+  |one_reg_imm_inst {addLine(yylineno);}
+  |two_reg_label_inst {addLine(yylineno);}
+  |one_reg_label_inst {addLine(yylineno);}
+  |one_label_inst {addLine(yylineno);}
+  |other_inst {addLine(yylineno);}
 ;
 
 three_reg:

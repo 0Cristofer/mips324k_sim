@@ -17,9 +17,7 @@ L6:
     jr $t1
     lui $t1, 34125
     madd $t1, $t2
-
 L3:
-
     mfhi $t1
     mflo $t1
     movn $t1, $t2, $t3

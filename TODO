@@ -1,8 +1,5 @@
 TODO:
-    - Leitura de opções/argumentos
-    - Fazer arquivo de saída do binário
+    - Ler o nome do program AKA ler o nome do arquivo de entrada até o ponto '.'
     - Fazer arquivo de saída final
 
 Problemas:
-    - Offset shift (18bits) - utilizar int 16
-    - Instrução J é diferente - utilizar endereço não relativo
