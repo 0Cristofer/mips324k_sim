@@ -9,6 +9,7 @@
 #include "include/mips324k_sim.h"
 #include "include/util.h"
 #include "parsers/include/parser.h"
+#include "simulator/include/simulator.h"
 
 int main(int argc, char** argv){
     int i, total_instructions, ok;
@@ -38,6 +39,7 @@ int main(int argc, char** argv){
 
     printf("\tTranslation done. Starting simulation...\n");
 
+    startSimulation(prog_mem, (unsigned int) total_instructions);
 
     printf("\tEnd of simulation.\n");
 

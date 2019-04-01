@@ -15,4 +15,4 @@ ADD_FLEX_BISON_DEPENDENCY(SimScanner SimParser)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-add_executable(mips324k_sim ${BISON_SimParser_OUTPUTS} ${FLEX_SimScanner_OUTPUTS} src/parsers/include/parser.h src/mips324k_sim.c src/include/mips324k_sim.h src/parsers/parser.c src/util.c src/include/util.h)
+add_executable(mips324k_sim ${BISON_SimParser_OUTPUTS} ${FLEX_SimScanner_OUTPUTS} src/parsers/include/parser.h src/mips324k_sim.c src/include/mips324k_sim.h src/parsers/parser.c src/util.c src/include/util.h src/simulator/simulator.c src/simulator/include/simulator.h)
