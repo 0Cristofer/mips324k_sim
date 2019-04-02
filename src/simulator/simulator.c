@@ -115,17 +115,7 @@ void instruction(){
     inst_barrier.offset = offset;
     inst_barrier.code = code;
 
-    // Check for unconditional branches
-    if((op_type == NONE) && ((op_code == J) || ((op_code == B) && ((rt == 0) && (rs == 0))))){
-            unconditionalBranch(op_code, rs, immediate, offset);
-    }
-    else if((op_type == SPECIAL) && (op_code == JR))
-        unconditionalBranch(op_code, rs, immediate, offset);
-    else{
-        branchPrecdictor();
-        pc = pc + 1;
-
-    }
+    branchPrecdictor(op_type, op_code, rs, rt, immediate, offset);
 
     if(pc == num_instructions) running = 0;
 }
@@ -146,8 +136,18 @@ void write(){
     if(has_error) return;
 }
 
-void branchPrecdictor(){
+void branchPrecdictor(unsigned int op_type, unsigned int op_code,
+                      unsigned int rs, unsigned int rt, uint16_t immediate, unsigned int offset){
     if(has_error) return;
+
+    // Check for unconditional branches
+    if((op_type == NONE) && ((op_code == J) || ((op_code == B) && ((rt == 0) && (rs == 0))))){
+        unconditionalBranch(op_code, rs, immediate, offset);
+    }
+    else if((op_type == SPECIAL) && (op_code == JR))
+        unconditionalBranch(op_code, rs, immediate, offset);
+    else
+        pc = pc + 1;
 }
 
 void unconditionalBranch(unsigned int op_c, unsigned int r, uint16_t imm, unsigned int off){
