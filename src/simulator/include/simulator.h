@@ -9,6 +9,7 @@
 #include <stdint-gcc.h>
 
 #define NUM_REGISTERS 32
+#define BRENCH_PRED_SIZE 65536
 #define OP_DECODE_0 0
 #define OP_DECODE_1 1
 #define OP_DECODE_2 28
@@ -51,6 +52,14 @@ typedef struct{
     unsigned int op_type, op_code, offset, code;
     uint16_t immediate;
 }inst_barrier_t;
+
+/**
+ * Structure used in the two bit branch predictor.
+ */
+typedef struct{
+    unsigned int is_new : 1;
+    unsigned int pred : 2;
+}two_bit_t;
 
 // General simulator variables
 unsigned int running, num_instructions;
@@ -116,8 +125,8 @@ void align();
 void write();
 
 /**
- * Branch prediction and program counter component. Calls change to pc if there is a unconditional branch, or just increments
- * it. After, looks up the branch prediction table (if ther branch is conditional).
+ * Updates the program counter. If the instruction is a branch, let the branch test/predictor update, else goes to next
+ * instruction
  * @param op_type Type of the op code
  * @param op_code The op code
  * @param rs Source register
@@ -125,8 +134,28 @@ void write();
  * @param immediate Immediate data
  * @param offset Offset data
  */
-void branchPrecdictor(unsigned int op_type, unsigned int op_code,
-                      unsigned int rs, unsigned int rt, uint16_t immediate, unsigned int offset);
+void updatePc(unsigned int op_type, unsigned int op_code,
+              unsigned int rs, unsigned int rt, uint16_t immediate, unsigned int offset);
+
+
+/**
+ * Effectively verifies if the current instruction is a branch and if it is a unconditional branch, just update, else
+ * calls the branch predictor
+ * @param op_type Type of the op code
+ * @param op_code The op code
+ * @param rs Source register
+ * @param rt Target register
+ * @param immediate Immediate data
+ * @param offset Offset data
+ * @return If the current instruction is a branch
+ */
+unsigned int branchTest(unsigned int op_type, unsigned int op_code,
+                        unsigned int rs, unsigned int rt, uint16_t immediate, unsigned int offset);
+
+/**
+ * TODO
+ */
+void branchPredictor();
 
 /**
  * Makes a unconditional branch, updating pc.

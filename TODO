@@ -1,7 +1,4 @@
 TODO:
     - Ler o nome do program AKA ler o nome do arquivo de entrada até o ponto '.'
     - Fazer arquivo de saída final
-
-Problemas:
-    - Onde armazenar o imediato/offset
-    - Saltos diretos
+    - Estruturas para previsão de desvio: localização do salto, atualização da bht ao verificar o salto de fato

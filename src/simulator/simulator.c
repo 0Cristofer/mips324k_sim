@@ -115,7 +115,7 @@ void instruction(){
     inst_barrier.offset = offset;
     inst_barrier.code = code;
 
-    branchPrecdictor(op_type, op_code, rs, rt, immediate, offset);
+    updatePc(op_type, op_code, rs, rt, immediate, offset);
 
     if(pc == num_instructions) running = 0;
 }
@@ -136,22 +136,99 @@ void write(){
     if(has_error) return;
 }
 
-void branchPrecdictor(unsigned int op_type, unsigned int op_code,
-                      unsigned int rs, unsigned int rt, uint16_t immediate, unsigned int offset){
-    if(has_error) return;
+void updatePc(unsigned int op_type, unsigned int op_code,
+              unsigned int rs, unsigned int rt, uint16_t immediate, unsigned int offset){
 
-    // Check for unconditional branches
-    if((op_type == NONE) && ((op_code == J) || ((op_code == B) && ((rt == 0) && (rs == 0))))){
-        unconditionalBranch(op_code, rs, immediate, offset);
-    }
-    else if((op_type == SPECIAL) && (op_code == JR))
-        unconditionalBranch(op_code, rs, immediate, offset);
-    else
+    if(!branchTest(op_type, op_code, rs, rt, immediate, offset))
         pc = pc + 1;
+}
+
+unsigned int branchTest(unsigned int op_type, unsigned int op_code,
+                        unsigned int rs, unsigned int rt, uint16_t immediate, unsigned int offset){
+
+    switch (op_type){
+        case SPECIAL:
+            if(op_code == JR) unconditionalBranch(op_code, rs, immediate, offset);
+            else return 0;
+
+            return 1;
+
+        case REGIMM:
+            branchPredictor();
+            return 1;
+
+        case SPECIAL2:
+            return 0;
+
+        case NONE:
+            switch (op_code){
+                case J:
+                    unconditionalBranch(op_code, rs, immediate, offset);
+                    return 1;
+
+                case B:
+                    if((rt == 0) && (rs == 0)) unconditionalBranch(op_code, rs, immediate, offset);
+                    else branchPredictor();
+                    return 1;
+
+                case BEQL:
+                case BGTZ:
+                case BLEZ:
+                case BNE:
+                    branchPredictor();
+                    return 1;
+
+                default:
+                    return 0;
+            }
+
+        default:
+            printDebugError("Instruction/branch predictor", "Unkown op type");
+            error();
+            return 0;
+    }
+}
+
+void branchPredictor(){
+    int i;
+
+    two_bit_t bht[BRENCH_PRED_SIZE];
+
+    for(i = 0; i < BRENCH_PRED_SIZE; i++){
+        bht[i].is_new = 1;
+    }
+
+    unsigned int twoBitPred(uint16_t index){
+        if(index < pc){
+            if(bht[index].is_new){
+                bht[index].is_new = 0;
+                bht[index].pred = 3;
+            }
+        }
+        else{
+            if(bht[index].is_new){
+                bht[index].is_new = 0;
+                bht[index].pred = 0;
+            }
+        }
+
+        return bht[index].pred;
+    }
+
+    void updateBht(uint16_t index, unsigned int b){
+        if(b){
+            if(bht[index].pred != 3) bht[index].pred = bht[index].pred + 1;
+        }
+        else{
+            if(bht[index].pred != 0) bht[index].pred = bht[index].pred - 1;
+        }
+    }
+
 }
 
 void unconditionalBranch(unsigned int op_c, unsigned int r, uint16_t imm, unsigned int off){
     if(has_error) return;
+
     printDebugMessageInt("inconditional branch from", pc);
 
     switch (op_c){
