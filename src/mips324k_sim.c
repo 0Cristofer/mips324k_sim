@@ -13,7 +13,7 @@
 
 int main(int argc, char** argv){
     int i, total_instructions, ok;
-    int unsigned *prog_mem;
+    int unsigned *insts;
     char **inst_strs;
 
     args_t args;
@@ -31,7 +31,7 @@ int main(int argc, char** argv){
 
     printf("\tReading input assembly file.\n");
 
-    ok = parseInput(args.input_name, &total_instructions, &prog_mem, &inst_strs);
+    ok = parseInput(args.input_name, &total_instructions, &insts, &inst_strs);
     if(!ok){
         printf("Failed to read input file, aborting simulation.\n");
         return 0;
@@ -39,13 +39,13 @@ int main(int argc, char** argv){
 
     printf("\tTranslation done. Starting simulation...\n");
 
-    startSimulation(prog_mem, (unsigned int) total_instructions);
+    startSimulation(insts, (unsigned int) total_instructions, args.debug);
 
     printf("\tEnd of simulation.\n");
 
     if(args.binary_output_name != NULL){
-        printf("\tWriting binary output,\n");
-        writeBinary(args.binary_output_name, total_instructions, prog_mem);
+        printf("\tWriting binary output.\n");
+        writeBinary(args.binary_output_name, total_instructions, insts);
     }
 
     printf("\tWriting simulation ouput.\n");
@@ -53,7 +53,7 @@ int main(int argc, char** argv){
     printf("\tCleaning up...\n");
     for(i = 0; i < total_instructions; i++) free(inst_strs[i]);
     free(inst_strs);
-    free(prog_mem);
+    free(insts);
 
     printf("\tEnd.\n");
     return 0;

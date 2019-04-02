@@ -2,7 +2,7 @@ L1: add $t1, $t2, $t3
     addi $t1, $t2, 23412
     and $t1, $t2, $t3
 L2: andi $t1, $t2, 67434
-    b L1
+    b L5
     beq $t1, $t2, L2
 L5: beql $t1, $t2, L3
     bgez $t1, L3
@@ -32,6 +32,6 @@ L4: mtlo $t1
     or $t1, $t2, $t3
     ori $t1, $t2, 23434
     sub $t1, $t2, $t3
-    syscall
+    syscall 0
     xor $t1, $t2, $t3
     xori $t1, $t2, 34514

@@ -8,11 +8,12 @@
 
 #include <getopt.h>
 
-#define ARGSSTR "hi:o:d"
+#define ARGSSTR "hbi:o:d"
 
 typedef struct{
     int help;
     int detail;
+    int debug;
     char *input_name;
     char *binary_output_name;
 } args_t;

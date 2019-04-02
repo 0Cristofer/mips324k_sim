@@ -1,7 +1,7 @@
 /* Mips32 4K simulator assembly translator helper functions
    Author: Cristofer Oswald
    Created: 17/03/2019
-   Edited: 21/03/2019 */
+   Edited: 02/04/2019 */
 
 #include <string.h>
 #include <stdlib.h>
@@ -45,6 +45,8 @@ int parseInput(char *file_name, int *n_inst, unsigned int **insts, char ***insts
     yyparse();
 
     /* Reads the instruction lines */
+
+    if(current_inst == 0) return 0;
 
     rewind(yyin);
     *insts_strs = malloc(sizeof(char *) * current_line);
@@ -170,6 +172,14 @@ void addOffsetIns(unsigned int op_code) {
     addInst();
 
     instructions[current_inst] = op_code;
+
+    current_inst = current_inst + 1;
+}
+
+void addSyscall(unsigned int op_code, unsigned int code){
+    addInst();
+
+    instructions[current_inst] = (code << 12) | op_code;
 
     current_inst = current_inst + 1;
 }

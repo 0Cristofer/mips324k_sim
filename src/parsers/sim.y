@@ -1,7 +1,7 @@
 /* Mips32 4K simulator assembly translator syntax
    Author: Cristofer Oswald
    Created: 17/03/2019
-   Edited: 21/03/2019 */
+   Edited: 02/04/2019 */
 
 %{
   #include <stdint.h>
@@ -158,7 +158,7 @@ one_label_inst:
 
 other_inst:
   nop {add3RegIns($1, 0, 0, 0);}
-  |syscall {add3RegIns($1, 0, 0, 0);}
+  |syscall immediate {addSyscall($1, $2);}
 ;
 
 nop:

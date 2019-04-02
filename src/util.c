@@ -12,6 +12,7 @@ void initArgs(args_t* args) {
     args->input_name = NULL;
     args->binary_output_name = NULL;
     args->detail = 0;
+    args->debug = 0;
 }
 
 int readArgs(args_t* args, int argc, char** argv) {
@@ -22,6 +23,7 @@ int readArgs(args_t* args, int argc, char** argv) {
             {"input", required_argument, NULL, 'i'},
             {"output", required_argument, NULL, 'o'},
             {"detail", no_argument, NULL, 'd'},
+            {"debug", no_argument, NULL, 'b'},
             {NULL, 0, NULL, 0}
     };
 
@@ -41,6 +43,9 @@ int readArgs(args_t* args, int argc, char** argv) {
                 break;
             case 'd':
                 args->detail = 1;
+                break;
+            case 'b':
+                args->debug = 1;
                 break;
             case '?':
                 printf("Unknown option: \"%s\", use '-h' for help. Aborting.", argv[optind-1]);
