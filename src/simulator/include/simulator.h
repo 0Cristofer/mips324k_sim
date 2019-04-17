@@ -8,11 +8,15 @@
 
 #include <stdint-gcc.h>
 
-#define NUM_REGISTERS 32
-#define BRENCH_PRED_SIZE 65536
+#include "../../helpers/include/queue.h"
+
 #define OP_DECODE_0 0
 #define OP_DECODE_1 1
 #define OP_DECODE_2 28
+
+#define NUM_REGISTERS 32
+#define BRENCH_PRED_SIZE 1024
+#define INST_QUEUE_SIZE 4
 
 /* Op code groups
     SPECIAL: ADD, AND, DIV, JR, MFHI, MFLO, MOVN, MOVZ, MTHI, MTLO, MULT, NOP, NOR, OR, SUB, XOR
@@ -69,6 +73,7 @@ extern int debug;
 unsigned int *instructions;
 unsigned int registers[NUM_REGISTERS];
 unsigned int pc;
+queue_t instruction_queue;
 inst_barrier_t inst_barrier;
 
 // General simulator functions
@@ -124,46 +129,6 @@ void align();
  */
 void write();
 
-/**
- * Updates the program counter. If the instruction is a branch, let the branch test/predictor update, else goes to next
- * instruction
- * @param op_type Type of the op code
- * @param op_code The op code
- * @param rs Source register
- * @param rt Target register
- * @param immediate Immediate data
- * @param offset Offset data
- */
-void updatePc(unsigned int op_type, unsigned int op_code,
-              unsigned int rs, unsigned int rt, uint16_t immediate, unsigned int offset);
-
-
-/**
- * Effectively verifies if the current instruction is a branch and if it is a unconditional branch, just update, else
- * calls the branch predictor
- * @param op_type Type of the op code
- * @param op_code The op code
- * @param rs Source register
- * @param rt Target register
- * @param immediate Immediate data
- * @param offset Offset data
- * @return If the current instruction is a branch
- */
-unsigned int branchTest(unsigned int op_type, unsigned int op_code,
-                        unsigned int rs, unsigned int rt, uint16_t immediate, unsigned int offset);
-
-/**
- * TODO
- */
-void branchPredictor();
-
-/**
- * Makes a unconditional branch, updating pc.
- * @param op_c The op code
- * @param r Registe
- * @param imm Immediate
- * @param off Offset
- */
-void unconditionalBranch(unsigned int op_c, unsigned int r, uint16_t imm, unsigned int off);
+void updatePc(int next_pc);
 
 #endif //MIPS324K_SIM_SIMULATOR_H
