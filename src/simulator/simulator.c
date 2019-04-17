@@ -49,6 +49,8 @@ void instruction(){
     int next_pc;
     queue_data_t data;
 
+    if(has_error) return;
+
     if(instruction_queue.size) return; // If there is elements in the instruction queue, do nothing
 
     while((instruction_queue.size < INST_QUEUE_SIZE) && running){
@@ -58,8 +60,7 @@ void instruction(){
 
         next_pc = branchComponent();
 
-        if(next_pc) updatePc(next_pc); // If a branch was taken, go to given instruction
-        else updatePc(1); // Else, go to next instruction
+        updatePc(next_pc); // The PC increment will be given from the branch component
     }
 }
 

@@ -19,7 +19,7 @@
 #define INST_QUEUE_SIZE 4
 
 /* Op code groups
-    SPECIAL: ADD, AND, DIV, JR, MFHI, MFLO, MOVN, MOVZ, MTHI, MTLO, MULT, NOP, NOR, OR, SUB, XOR
+    SPECIAL: ADD, AND, DIV, MFHI, MFLO, MOVN, MOVZ, MTHI, MTLO, MULT, NOP, NOR, OR, SUB, XOR
     REGIMM: BGEZ, BLTZ
     SPECIAL2: MADD, MSUB, MUL
     NONE: ADDI, ANDI, B, BEQ, BEQL, BGTZ, BLEZ, BNE, J, LUI, ORI, XORI
@@ -39,7 +39,7 @@ enum op_codes{
     ADD = 32, ADDI = 8, AND = 36, ANDI = 12,
     B = 4, BEQ = 4, BEQL = 20, BGEZ = 1, BGTZ = 7, BLEZ = 6, BLTZ = 0, BNE = 5,
     DIV = 26,
-    J = 2, JR = 8,
+    J = 2,
     LUI = 15,
     MADD = 0, MFHI = 16, MFLO = 18, MOVN = 11, MOVZ = 10, MSUB = 4, MTHI = 17, MTLO = 19, MUL = 2, MULT = 24,
     NOP = 0, NOR = 39,

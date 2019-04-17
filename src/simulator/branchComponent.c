@@ -9,82 +9,62 @@
 #include "include/util.h"
 
 int branchComponent(){
-    unsigned int instruction, op_type, op_code, next_pc = 0;
+    unsigned int instruction, op_code, offset, immediate, rt, rs;
+    int next_pc = 1;
 
     instruction = instruction_queue.head->data.instruction;
 
     switch (instruction >> 26){
         case OP_DECODE_0:
-            op_type = SPECIAL;
-            op_code =  instruction & (unsigned int)63;
-
-            if(op_code == JR) op_code;
-            else return 0;
-
+        case OP_DECODE_2:
             break;
 
         case OP_DECODE_1:
-            op_type = REGIMM;
+            offset =  instruction & (unsigned int)65535;
 
-            op_code = ((instruction >> 16) & (unsigned int)31);
+            next_pc = next_pc; // Call branch predictor
 
             break;
-
-        case OP_DECODE_2:
-            return 0;
 
         default:
-            op_type = NONE;
+            op_code = instruction >> 26;
 
-            op_code = instruction >> (unsigned int)26;
-
-            break;
-    }
-}
-
-unsigned int branchTest(unsigned int op_type, unsigned int op_code,
-                        unsigned int rs, unsigned int rt, uint16_t immediate, unsigned int offset){
-
-    switch (op_type){
-        case SPECIAL:
-            if(op_code == JR) unconditionalBranch(op_code, rs, immediate, offset);
-            else return 0;
-
-            return 1;
-
-        case REGIMM:
-            branchPredictor();
-            return 1;
-
-        case SPECIAL2:
-            return 0;
-
-        case NONE:
             switch (op_code){
+                case ADDI:
+                case ANDI:
+                case LUI:
+                case ORI:
+                case XORI:
+                    break;
+
                 case J:
-                    unconditionalBranch(op_code, rs, immediate, offset);
-                    return 1;
+                    offset = instruction & (unsigned int)67108863;
+
+                    next_pc = offset; // Calc relative
+
+                    break;
 
                 case B:
-                    if((rt == 0) && (rs == 0)) unconditionalBranch(op_code, rs, immediate, offset);
-                    else branchPredictor();
-                    return 1;
+                    immediate = (uint16_t)(instruction & (unsigned int)65535);
 
-                case BEQL:
-                case BGTZ:
-                case BLEZ:
-                case BNE:
-                    branchPredictor();
-                    return 1;
+                    rt = (instruction >> 16) & (unsigned int)31;
+                    rs = (instruction >> 21) & (unsigned int)31;
+
+                    if((rt == 0) && (rs == 0)){
+                        next_pc = immediate;
+                    }
+
+                    break;
 
                 default:
-                    return 0;
+                    immediate = (uint16_t)(instruction & (unsigned int)65535);
+
+                    next_pc = next_pc; // Call branch predictor
+
+                    break;
             }
 
-        default:
-            printDebugError("Instruction/branch predictor", "Unkown op type");
-            error();
-            return 0;
+            break;
     }
 }
 
@@ -123,27 +103,4 @@ void branchPredictor(){
         }
     }
 
-}
-
-void unconditionalBranch(unsigned int op_c, unsigned int r, uint16_t imm, unsigned int off){
-    if(has_error) return;
-
-    printDebugMessageInt("inconditional branch from", pc);
-
-    switch (op_c){
-        case B:
-            pc = pc + (int16_t)imm;
-            break;
-        case J:
-            pc = off;
-            break;
-        case JR:
-            pc = registers[r];
-            break;
-        default:
-            printDebugError("Instruction/unconditional branch", "Unkown unconditional branch op code");
-            error();
-    }
-
-    printDebugMessageInt("to", pc);
 }

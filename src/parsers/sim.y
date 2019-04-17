@@ -17,7 +17,7 @@
 
 %token ADD ADDI AND ANDI
 %token B BEQ BEQL BGEZ BGTZ BLEZ BLTZ BNE
-%token DIV J JR LUI
+%token DIV J LUI
 %token MADD MFHI MFLO MOVN MOVZ MSUB MTHI MTLO MUL MULT
 %token NOP NOR OR ORI SUB SYSCALL XOR XORI
 
@@ -96,8 +96,7 @@ two_reg_inst:
 ;
 
 one_reg:
-  JR    {$$ = yylval.code;}
-  |MFHI {$$ = yylval.code;}
+  MFHI {$$ = yylval.code;}
   |MFLO {$$ = yylval.code;}
   |MTHI {$$ = yylval.code;}
   |MTLO {$$ = yylval.code;}

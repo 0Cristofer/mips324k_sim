@@ -1,7 +1,7 @@
 /* Mips32 4K simulator assembly translator lexer
    Author: Cristofer Oswald
    Created: 17/03/2019
-   Edited: 21/03/2019 */
+   Edited: 17/04/2019 */
 
 %option noyywrap nodefault
 
@@ -35,7 +35,6 @@
 "bne"      {yylval.code = 335544320; return BNE;}
 "div"      {yylval.code = 26; return DIV;}
 "j"        {yylval.code = 134217728; return J;}
-"jr"       {yylval.code = 8; return JR;}
 "lui"      {yylval.code = 1006632960; return LUI;}
 "madd"     {yylval.code = 1879048192; return MADD;}
 "mfhi"     {yylval.code = 16; return MFHI;}
