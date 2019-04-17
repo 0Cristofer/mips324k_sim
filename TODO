@@ -1,9 +1,15 @@
 TODO:
     - Ler o nome do program AKA ler o nome do arquivo de entrada até o ponto '.'
     - Fazer arquivo de saída final
+    - Execution stage
     - Estruturas para previsão de desvio: localização do salto, atualização da bht ao verificar o salto de fato
 
 Problemas:
+    - Quando a instrução sai de fato da fila?
+        - Após decodificar? É necessário saber o operando para verificar disponibilidade de UF
+    - BHT com 1024 apenas, sendo que são 16 bits para indexar
+
+Notas:
     - Entendimento do pipeline no geral: de escalar para super escalar
     - O que deve utilizar o manual?
         - Exemplo: Estágio de instrução apenas busca a instrução (escalar), com PD deve decodificar?

@@ -12,9 +12,7 @@ L5: beql $t1, $t2, L3
     bltz $t1, L6
     bne $t1, $t2, L7
 L7: div $t1, $t2
-    j L2
-L6:
-    jr $t1
+L6: j L3
     lui $t1, 34125
     madd $t1, $t2
 L3:

@@ -1,7 +1,7 @@
 /* Mips32 4K simulator implementations file
    Authors: Cristofer Oswald
    Created: 29/03/2019
-   Edited: 02/04/2019 */
+   Edited: 17/04/2019 */
 
 #ifndef MIPS324K_SIM_SIMULATOR_H
 #define MIPS324K_SIM_SIMULATOR_H
@@ -57,13 +57,7 @@ typedef struct{
     uint16_t immediate;
 }inst_barrier_t;
 
-/**
- * Structure used in the two bit branch predictor.
- */
-typedef struct{
-    unsigned int is_new : 1;
-    unsigned int pred : 2;
-}two_bit_t;
+
 
 // General simulator variables
 unsigned int running, num_instructions;
@@ -72,8 +66,8 @@ extern int debug;
 // Program specific
 unsigned int *instructions;
 unsigned int registers[NUM_REGISTERS];
-unsigned int pc;
-queue_t instruction_queue;
+extern unsigned int pc;
+extern queue_t instruction_queue;
 inst_barrier_t inst_barrier;
 
 // General simulator functions
@@ -91,6 +85,11 @@ void startSimulation(unsigned int *insts, unsigned int num_insts, int b);
  */
 void error();
 
+/**
+ * Frees utilized memory
+ */
+void cleanup();
+
 // Hardware implementations
 
 /**
@@ -105,30 +104,39 @@ void clock();
 void pipeline();
 
 /**
- * First pipeline stage. Decodes the instruction, calling the branch predictor and setting up the registers needed
+ * First pipeline stage. If the instruction queue is emepty, fetches instructions until the instruction queue is full.
+ * Each instruction fetched goes to the branch component, so the program counter can be updated if there is a branch/jump.
  */
 void instruction();
 
 /**
- * Second pipeline stage. Starts de execution of a instruction.
+ * Second pipeline stage. Removes instructions from the queue, if possible. Decodes the instructions
+ * TODO
  */
 void execution();
 
 /**
- * Third pipeline stage. Finaliza a execução das instruções
+ * Third pipeline stage.
+ * TODO
  */
 void memory();
 
 /**
- * Fourth pipeline stage. Aligns the data
+ * Fourth pipeline stage.
+ * TODO
  */
 void align();
 
 /**
- * Fifth pipeline stage. Writes the data to the source
+ * Fifth pipeline stage.
+ * TODO
  */
 void write();
 
+/**
+ * Updates the program counter based on an offset
+ * @param next_pc The offset to be added to the program counter
+ */
 void updatePc(int next_pc);
 
 #endif //MIPS324K_SIM_SIMULATOR_H

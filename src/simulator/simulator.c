@@ -1,7 +1,7 @@
 /* Mips32 4K simulator implementations file
    Authors: Cristofer Oswald
    Created: 29/03/2019
-   Edited: 02/04/2019 */
+   Edited: 17/04/2019 */
 
 #include "include/simulator.h"
 #include "include/branchComponent.h"
@@ -12,6 +12,9 @@
 
 int debug;
 int has_error = 0;
+
+unsigned int pc;
+queue_t instruction_queue;
 
 void startSimulation(unsigned int *insts, unsigned int num_insts, int b){
     int i;
@@ -29,11 +32,19 @@ void startSimulation(unsigned int *insts, unsigned int num_insts, int b){
     }
 
     clock();
+
+    cleanup();
 }
 
 void clock(){
+    int cycle = 0;
+
     while(running){
+        printDebugMessageInt("************** Cycle *******", cycle);
+
         pipeline();
+
+        cycle++;
     }
 }
 
@@ -51,42 +62,61 @@ void instruction(){
 
     if(has_error) return;
 
-    if(instruction_queue.size) return; // If there is elements in the instruction queue, do nothing
+    if(instruction_queue.size){ // If there is elements in the instruction queue, do nothing
+        printDebugMessage("---Instruction stage. Queue has elements, skipping fetch...---");
+        return;
+    }
+
+    printDebugMessage("---Instruction stage. Fetching instructions---");
 
     while((instruction_queue.size < INST_QUEUE_SIZE) && running){
+        if(pc == num_instructions){
+            printDebugMessage("Out of instructions. Stopping fetch");
+            return;
+        }
+
         data.instruction = instructions[pc];
+
+        printDebugMessageInt("\tFetched instruction", pc);
 
         pushQueue(&instruction_queue, data);
 
-        next_pc = branchComponent();
+        next_pc = branchComponent(pc);
 
         updatePc(next_pc); // The PC increment will be given from the branch component
     }
 }
 
-/*void instruction(){
+void execution(){
     unsigned int instruction, op_type, op_code, rd = 0, rt = 0, rs = 0, offset = 0, code = 0;
     uint16_t immediate = 0;
 
     if(has_error) return;
 
-    instruction = instructions[pc];
+    if((!instruction_queue.size) && (pc == num_instructions)) running = 0; // Temporary
 
-    printDebugMessageInt("Decoding instruction", pc);
+    if(!instruction_queue.size){
+        printDebugMessage("---Execution stage. Queue is empety, skipping...---");
+        return;
+    }
+
+    printDebugMessage("---Execution stage. Decoding instruction---");
+
+    instruction = popQueue(&instruction_queue).instruction;
 
     // Decodification
     switch (instruction >> 26){
         case OP_DECODE_0:
             op_type = SPECIAL;
 
-            op_code =  instruction & (unsigned int)63; // Get only first 6 bits
+            op_code =  instruction & (unsigned int)63;
 
             if(op_code == SYSCALL){
                 code = instruction >> 6;
             }
             else {
 
-                rd = (instruction >> 11) & (unsigned int) 31; // Get only first 5 bits
+                rd = (instruction >> 11) & (unsigned int) 31;
                 rt = (instruction >> 16) & (unsigned int) 31;
                 rs = (instruction >> 21) & (unsigned int) 31;
             }
@@ -96,7 +126,7 @@ void instruction(){
         case OP_DECODE_1:
             op_type = REGIMM;
 
-            offset =  instruction & (unsigned int)65535; // Get only first 16 bits
+            offset =  instruction & (unsigned int)65535;
             op_code = ((instruction >> 16) & (unsigned int)31);
             rs = (instruction >> 21) & (unsigned int)31;
 
@@ -105,8 +135,8 @@ void instruction(){
         case OP_DECODE_2:
             op_type = SPECIAL2;
 
-            op_code =  instruction & (unsigned int)63; // Get only first 6 bits
-            rd = (instruction >> 11) & (unsigned int)31; // Get only first 5 bits
+            op_code =  instruction & (unsigned int)63;
+            rd = (instruction >> 11) & (unsigned int)31;
             rt = (instruction >> 16) & (unsigned int)31;
             rs = (instruction >> 21) & (unsigned int)31;
 
@@ -127,23 +157,6 @@ void instruction(){
 
             break;
     }
-
-    inst_barrier.op_type = op_type;
-    inst_barrier.op_code = op_code;
-    inst_barrier.rd = rd;
-    inst_barrier.rt = rt;
-    inst_barrier.rs = rs;
-    inst_barrier.immediate = immediate;
-    inst_barrier.offset = offset;
-    inst_barrier.code = code;
-
-    updatePc(op_type, op_code, rs, rt, immediate, offset);
-
-    if(pc == num_instructions) running = 0;
-}*/
-
-void execution(){
-    if(has_error) return;
 }
 
 void memory(){
@@ -160,8 +173,10 @@ void write(){
 
 void updatePc(int next_pc){
     pc = pc + next_pc;
+}
 
-    if(pc == num_instructions) running = 0;
+void cleanup(){
+    clearQueue(&instruction_queue);
 }
 
 void error(){
