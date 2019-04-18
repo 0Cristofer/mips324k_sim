@@ -7,7 +7,9 @@ TODO:
 Problemas:
     - Quando a instrução sai de fato da fila?
         - Após decodificar? É necessário saber o operando para verificar disponibilidade de UF
+            R: Ler apenas o operando, se tiver UF, então dar pop
     - BHT com 1024 apenas, sendo que são 16 bits para indexar
+        R: 10 bits
 
 Notas:
     - Entendimento do pipeline no geral: de escalar para super escalar
