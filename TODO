@@ -1,17 +1,15 @@
 TODO:
     - Ler o nome do program AKA ler o nome do arquivo de entrada até o ponto '.'
     - Fazer arquivo de saída final
-    - Execution stage
-    - Estruturas para previsão de desvio: localização do salto, atualização da bht ao verificar o salto de fato
+    - Verificar execution stage, pode ser simplificado
+    - Estruturas para scoreboardind e múltiplas UFs
 
 Problemas:
+
+Notas:
     - Quando a instrução sai de fato da fila?
         - Após decodificar? É necessário saber o operando para verificar disponibilidade de UF
             R: Ler apenas o operando, se tiver UF, então dar pop
-    - BHT com 1024 apenas, sendo que são 16 bits para indexar
-        R: 10 bits
-
-Notas:
     - Entendimento do pipeline no geral: de escalar para super escalar
     - O que deve utilizar o manual?
         - Exemplo: Estágio de instrução apenas busca a instrução (escalar), com PD deve decodificar?
@@ -21,3 +19,5 @@ Notas:
     - Quais barramentos precisam existir
         R: Conexões podem ser diretas
     - https://www.google.com/search?q=mips32+4k+diagram&source=lnms&tbm=isch&sa=X&ved=0ahUKEwigxIfSvsvhAhWEH7kGHVnvDC4Q_AUIDigB&biw=1440&bih=828#imgrc=dqFvqhFkVqpfxM:
+    - BHT com 1024 apenas, sendo que são 16 bits para indexar
+            R: 10 bits

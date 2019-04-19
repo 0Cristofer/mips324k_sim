@@ -15,11 +15,11 @@
 #define OP_DECODE_2 28
 
 #define NUM_REGISTERS 32
-#define BRENCH_PRED_SIZE 1024
-#define INST_QUEUE_SIZE 4
+#define MAX_INST_QUEUE_SIZE 4
+#define MAX_DECODE_QUEUE_SIZE 2
 
 /* Op code groups
-    SPECIAL: ADD, AND, DIV, MFHI, MFLO, MOVN, MOVZ, MTHI, MTLO, MULT, NOP, NOR, OR, SUB, XOR
+    SPECIAL: ADD, AND, DIV, MFHI, MFLO, MOVN, MOVZ, MTHI, MTLO, MULT, NOP, NOR, OR, SUB, SYSCALL, XOR
     REGIMM: BGEZ, BLTZ
     SPECIAL2: MADD, MSUB, MUL
     NONE: ADDI, ANDI, B, BEQ, BEQL, BGTZ, BLEZ, BNE, J, LUI, ORI, XORI
@@ -58,16 +58,22 @@ typedef struct{
 }inst_barrier_t;
 
 
-
 // General simulator variables
 unsigned int running, num_instructions;
 extern int debug;
+
+/* Temporary */
+
+int has_functional_unit;
+
+/* Temporary */
 
 // Program specific
 unsigned int *instructions;
 unsigned int registers[NUM_REGISTERS];
 extern unsigned int pc;
 extern queue_t instruction_queue;
+queue_t decode_queue;
 inst_barrier_t inst_barrier;
 
 // General simulator functions

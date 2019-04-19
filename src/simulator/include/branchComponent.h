@@ -8,6 +8,8 @@
 
 #include <stdint.h>
 
+#define BRENCH_PRED_SIZE 1024
+
 /**
  * Structure used in the two bit branch predictor.
  */

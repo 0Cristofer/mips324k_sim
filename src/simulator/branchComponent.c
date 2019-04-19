@@ -87,15 +87,15 @@ int branchComponent(int pc) {
 }
 
 int branchPredictor(uint16_t offset) {
-    int i;
+    offset = offset & ((uint16_t)1023);
 
-    two_bit_t bht[BRENCH_PRED_SIZE];
+    /*two_bit_t bht[BRENCH_PRED_SIZE];
 
     for(i = 0; i < BRENCH_PRED_SIZE; i++){
         bht[i].is_new = 1;
     }
 
-    /*unsigned int twoBitPred(uint16_t index){
+    unsigned int twoBitPred(uint16_t index){
         if(index < pc){
             if(bht[index].is_new){
                 bht[index].is_new = 0;
