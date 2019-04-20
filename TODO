@@ -1,7 +1,7 @@
 TODO:
     - Ler o nome do program AKA ler o nome do arquivo de entrada até o ponto '.'
     - Fazer arquivo de saída final
-    - Verificar execution stage, pode ser simplificado
+    - A verificação de unidade funcional será modificada, o que está agora é apenas um placeholder
     - Estruturas para scoreboardind e múltiplas UFs
 
 Problemas:

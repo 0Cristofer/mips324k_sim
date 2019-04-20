@@ -131,13 +131,13 @@ void memory();
  * Fourth pipeline stage.
  * TODO
  */
-void align();
+void alignAccumulate();
 
 /**
  * Fifth pipeline stage.
  * TODO
  */
-void write();
+void writeback();
 
 /**
  * Updates the program counter based on an offset
