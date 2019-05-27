@@ -10,6 +10,7 @@ union queue_data;
 struct queue;
 struct queue_element;
 
+typedef struct instruction_data instruction_data_t;
 typedef union queue_data queue_data_t;
 typedef struct queue queue_t;
 typedef struct queue_element queue_element_t;
@@ -18,7 +19,7 @@ typedef struct queue_element queue_element_t;
  * Possible data types to be used in the queue.
  */
 union queue_data{
-    unsigned int instruction;
+     instruction_data_t *instruction;
 };
 
 /**

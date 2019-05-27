@@ -1,27 +1,90 @@
 /* Mips32 4K simulator branch component implementation
    Authors: Cristofer Oswald
    Created: 17/04/2019
-   Edited: 17/04/2019 */
+   Edited: 27/05/2019 */
 
+#include <stdlib.h>
 
-#include "src/simulator/include/branchComponent.h"
+#include "include/branchComponent.h"
 #include "include/simulator.h"
 #include "include/util.h"
+#include "../helpers/include/linked_list.h"
 
-/* Adicionar prints de debug em PDs */
-int branchComponent(int pc) {
+two_bit_t bht[BRENCH_PRED_SIZE];
+instruction_data_t *current_branch_inst = NULL;
+
+void initBranchPredictor(){
+    int i;
+
+    for(i = 0; i < BRENCH_PRED_SIZE; i++){
+        bht[i].is_new = 1;
+    }
+}
+
+/**
+ * Two bit branch predictor. Uses a branch history table indexed by the 10 first bits of the branch target. Each
+ * entry is a satured counter, from 0 (strongly not taken) to 3 (strongly taken)
+ * @param index The index of the BHT to be read
+ * @return The prediction
+ */
+int twoBitPred(uint16_t index){
+    if(index < pc){
+        if(bht[index].is_new){
+            bht[index].is_new = 0;
+            bht[index].pred = 3;
+        }
+    }
+    else{
+        if(bht[index].is_new){
+            bht[index].is_new = 0;
+            bht[index].pred = 0;
+        }
+    }
+
+    return bht[index].pred;
+}
+
+/**
+ * Reads the first 10 bits of the offset and uses it as an index for the branch predictor
+ */
+int branchPredictor(uint16_t offset) {
+    uint16_t index = offset & ((uint16_t)1023);
+
+    if(twoBitPred(index) > 1){
+        return offset;
+    }
+
+    return 1;
+}
+
+void updateBht(uint16_t index, unsigned int b){
+    if(b){
+        if(bht[index].pred != 3) bht[index].pred = bht[index].pred + 1;
+    }
+    else{
+        if(bht[index].pred != 0) bht[index].pred = bht[index].pred - 1;
+    }
+}
+
+int branchComponent(int current_pc) {
     unsigned int instruction, op_code, offset, rt, rs;
     int next_pc = 1;
     uint16_t immediate;
+    instruction_data_t *inst_data;
 
-    instruction = instruction_queue.tail->data.instruction;
+    inst_data = instruction_queue.tail->data.instruction;
+    instruction = inst_data->instruction;
 
-    switch (instruction >> 26){
+    switch (instruction >> (unsigned int)26){
         case OP_DECODE_0:
         case OP_DECODE_2:
+            addSpeculative(inst_data);
+
             break;
 
         case OP_DECODE_1:
+            addSpeculative(inst_data);
+
             offset =  instruction & (unsigned int)65535;
 
             next_pc = branchPredictor((uint16_t) offset);
@@ -29,7 +92,7 @@ int branchComponent(int pc) {
             break;
 
         default:
-            op_code = instruction >> 26;
+            op_code = instruction >> (unsigned int)26;
 
             switch (op_code){
                 case ADDI:
@@ -37,15 +100,18 @@ int branchComponent(int pc) {
                 case LUI:
                 case ORI:
                 case XORI:
+                    addSpeculative(inst_data);
+
                     break;
 
                 case J:
-                    printDebugMessageInt("inconditional jump from", pc);
+                    printDebugMessageInt("inconditional jump from", current_pc);
 
                     offset = instruction & (unsigned int)67108863;
 
+                    free(instruction_queue.tail->data.instruction);
                     popQueue(&instruction_queue);
-                    next_pc = offset - pc;
+                    next_pc = offset - current_pc;
 
                     printDebugMessageInt("to", offset);
 
@@ -55,24 +121,28 @@ int branchComponent(int pc) {
 
                     immediate = (uint16_t)(instruction & (unsigned int)65535);
 
-                    rt = (instruction >> 16) & (unsigned int)31;
-                    rs = (instruction >> 21) & (unsigned int)31;
+                    rt = (instruction >> (unsigned int)16) & (unsigned int)31;
+                    rs = (instruction >> (unsigned int)21) & (unsigned int)31;
 
                     if((rt == 0) && (rs == 0)){
-                        printDebugMessageInt("inconditional branch from", pc);
+                        printDebugMessageInt("inconditional branch from", current_pc);
 
-                        next_pc = (int16_t)immediate;
+                        free(instruction_queue.tail->data.instruction);
                         popQueue(&instruction_queue);
+                        next_pc = (int16_t)immediate;
 
-                        printDebugMessageInt("to", pc+(int16_t)immediate);
+                        printDebugMessageInt("to", current_pc+(int16_t)immediate);
                     }
                     else{
+                        addSpeculative(inst_data);
                         next_pc = branchPredictor(immediate);
                     }
 
                     break;
 
                 default:
+                    addSpeculative(inst_data);
+
                     immediate = (uint16_t)(instruction & (unsigned int)65535);
 
                     next_pc = branchPredictor(immediate);
@@ -86,40 +156,17 @@ int branchComponent(int pc) {
     return next_pc;
 }
 
-int branchPredictor(uint16_t offset) {
-    offset = offset & ((uint16_t)1023);
+void addSpeculative(instruction_data_t* inst_data){
+    if(current_branch_inst){
+        inst_data->is_speculate = 1;
 
-    /*two_bit_t bht[BRENCH_PRED_SIZE];
-
-    for(i = 0; i < BRENCH_PRED_SIZE; i++){
-        bht[i].is_new = 1;
-    }
-
-    unsigned int twoBitPred(uint16_t index){
-        if(index < pc){
-            if(bht[index].is_new){
-                bht[index].is_new = 0;
-                bht[index].pred = 3;
-            }
+        if(current_branch_inst->speculative_insts){
+            insertElement(current_branch_inst->speculative_insts, inst_data);
         }
         else{
-            if(bht[index].is_new){
-                bht[index].is_new = 0;
-                bht[index].pred = 0;
-            }
+            current_branch_inst->speculative_insts = malloc(sizeof(linked_list_t *));
+            current_branch_inst->speculative_insts->data = inst_data;
+            current_branch_inst->speculative_insts->next = NULL;
         }
-
-        return bht[index].pred;
     }
-
-    void updateBht(uint16_t index, unsigned int b){
-        if(b){
-            if(bht[index].pred != 3) bht[index].pred = bht[index].pred + 1;
-        }
-        else{
-            if(bht[index].pred != 0) bht[index].pred = bht[index].pred - 1;
-        }
-    }*/
-
-    return 1;
 }

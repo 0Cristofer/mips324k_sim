@@ -5,8 +5,8 @@
 
 #include <stdio.h>
 
-#include <src/simulator/include/simulator.h>
-#include "src/simulator/include/util.h"
+#include "include/simulator.h"
+#include "include/util.h"
 
 void printDebugMessage(char *message){
     if(!debug) return;
@@ -20,5 +20,5 @@ void printDebugMessageInt(char *message, int d){
 
 void printDebugError(char *stage, char *message){
     if(!debug) return;
-    printf("ERROR: stage - %s, message: %s\n", stage, message);
+    fprintf(stderr, "ERROR: stage - %s, message: %s\n", stage, message);
 }

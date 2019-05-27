@@ -1,8 +1,3 @@
-    add $0, $0, $0
-    j L1
-    add $t1, $t2, $t3
-    addi $t1, $t2, 1000
-L1: addi $t1, $t2, 1000
-    add $0, $0, $0
-    add $0, $0, $0
-L2: add $0, $0, $0
+    lui $t1, 10
+    lui $t2, 20
+    sub $t3, $t1, $t2

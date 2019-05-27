@@ -1,23 +1,21 @@
 TODO:
     - Ler o nome do program AKA ler o nome do arquivo de entrada até o ponto '.'
     - Fazer arquivo de saída final
-    - A verificação de unidade funcional será modificada, o que está agora é apenas um placeholder
-    - Estruturas para scoreboardind e múltiplas UFs
+    - UFs executarem instrução quando possível
+    - Quantidade de ciclos de cada instrução (iniciado)
 
 Problemas:
+    Em que estágio cada etapa (emissão/leitura/execução/escrita) ocorrerá?
+    Como lidar com syscall?
+    MOV é executado por qual UF?
+    Quando desvios tem a resposta real?
+    O que os outros estágios fazem?
+    Onde está a tabela com ciclos por instrução?
+    Como lidar com o NOP e SYSCALL?
+    MADD/MSUB usa MUL?
+    O que é fowarding?
+    Como lidar com imediatos?
+    As operações com os registradores é com ou sem sinal?
 
 Notas:
-    - Quando a instrução sai de fato da fila?
-        - Após decodificar? É necessário saber o operando para verificar disponibilidade de UF
-            R: Ler apenas o operando, se tiver UF, então dar pop
-    - Entendimento do pipeline no geral: de escalar para super escalar
-    - O que deve utilizar o manual?
-        - Exemplo: Estágio de instrução apenas busca a instrução (escalar), com PD deve decodificar?
-            R: Fazer modificações necessárias, o que deve ser definido pelo manual é apenas a ideia dos estágios
-    - O que é Instruction adress calculation
-        R: Só para load/store
-    - Quais barramentos precisam existir
-        R: Conexões podem ser diretas
-    - https://www.google.com/search?q=mips32+4k+diagram&source=lnms&tbm=isch&sa=X&ved=0ahUKEwigxIfSvsvhAhWEH7kGHVnvDC4Q_AUIDigB&biw=1440&bih=828#imgrc=dqFvqhFkVqpfxM:
-    - BHT com 1024 apenas, sendo que são 16 bits para indexar
-            R: 10 bits
+    Questão do imediato está correto (verificado) até o PD

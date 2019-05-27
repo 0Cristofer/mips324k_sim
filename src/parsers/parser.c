@@ -117,7 +117,7 @@ void add1RegIns(unsigned int op_code, unsigned int rd){
     addInst();
 
     if((op_code == 8) || (op_code == 17) ||(op_code == 19)) rd = rd << (unsigned int)21;
-    else rd = rd << (unsigned int)11;;
+    else rd = rd << (unsigned int)11;
 
     instructions[current_inst] = rd | op_code;
 
@@ -179,7 +179,7 @@ void addOffsetIns(unsigned int op_code) {
 void addSyscall(unsigned int op_code, unsigned int code){
     addInst();
 
-    instructions[current_inst] = (code << 12) | op_code;
+    instructions[current_inst] = (code << (unsigned int)12) | op_code;
 
     current_inst = current_inst + 1;
 }

@@ -6,6 +6,7 @@
 #include "include/simulator.h"
 #include "include/branchComponent.h"
 #include "include/util.h"
+#include "include/alu.h"
 
 #include <stdlib.h>
 #include <stdint.h>
@@ -15,6 +16,7 @@ int has_error = 0;
 
 unsigned int pc;
 queue_t instruction_queue;
+queue_t decode_queue;
 
 void startSimulation(unsigned int *insts, unsigned int num_insts, int b){
     int i;
@@ -27,14 +29,16 @@ void startSimulation(unsigned int *insts, unsigned int num_insts, int b){
 
     initQueue(&instruction_queue);
     initQueue(&decode_queue);
-
-    has_functional_unit = 1; // Temporary
+    initAlu();
+    initBranchPredictor();
 
     for(i = 0; i < NUM_REGISTERS; i++){
-        registers[i] = 0;
+        registers[i] = 1;
     }
 
     clock();
+
+    printDebugMessageInt("Register t3", registers[11]);
 
     cleanup();
 }
@@ -85,7 +89,12 @@ void instruction(){
             return;
         }
 
-        data.instruction = instructions[pc];
+        data.instruction = malloc(sizeof(instruction_data_t));
+
+        data.instruction->instruction = instructions[pc];
+        data.instruction->speculative_insts = NULL;
+        data.instruction->is_speculate = 0;
+        data.instruction->pc = pc;
 
         printDebugMessageInt("\tFetched instruction", pc);
 
@@ -102,8 +111,9 @@ void execution(){
     queue_data_t data;
 
     unsigned int instruction, op_type, op_code, rd = 0, rt = 0, rs = 0, offset = 0, code = 0;
-    int has_fu = 1;
+    int has_functional_unit = 1;
     uint16_t immediate = 0;
+    instruction_data_t *inst_data;
 
     if(has_error) return;
 
@@ -116,57 +126,55 @@ void execution(){
             printDebugMessage("Instruction queue is empety, skipping");
         }
         else {
-            while ((decode_queue.size < MAX_DECODE_QUEUE_SIZE) && has_fu) {
+            while ((decode_queue.size < MAX_DECODE_QUEUE_SIZE) && has_functional_unit) {
                 if (!instruction_queue.size) {
                     printDebugMessage("Out of instructions. Stopping decode");
                     break;
                 }
                 else {
-                    instruction = instruction_queue.head->data.instruction;
+                    inst_data = instruction_queue.head->data.instruction;
+                    instruction = inst_data->instruction;
 
                     // Decodification
-                    switch (instruction >> 26) {
+                    switch (instruction >> (unsigned int)26) {
                         case OP_DECODE_0:
                             op_type = SPECIAL;
                             op_code = instruction & (unsigned int) 63;
+                            rd = (instruction >> (unsigned int)11) & (unsigned int) 31;
 
                             switch (op_code) {
                                 case ADD:
                                 case AND:
                                 case MOVN:
                                 case MOVZ:
+                                case MFHI:
+                                case MFLO:
+                                case MTHI:
+                                case MTLO:
                                 case NOP:
                                 case NOR:
                                 case OR:
                                 case XOR:
-                                    if (has_functional_unit) // Temporary, should verify specific functional unit
-                                        printDebugMessage("Has free ADD/LOGIC function unit, decoding");
+                                    has_functional_unit = hasFuAdd() && isRegFree(rd);
+                                    if (has_functional_unit)
+                                        printDebugMessage("Has free ADD/LOGIC/MOVE function unit, decoding");
                                     else
-                                        printDebugMessage("No free ADD/LOGIC function unit, stopping");
+                                        printDebugMessage("No free ADD/LOGIC/MOVE function unit, stopping");
 
                                     break;
 
                                 case SUB:
-                                    if (has_functional_unit) // Temporary, should verify specific functional unit
+                                    has_functional_unit = hasFuSub() && isRegFree(rd);
+                                    if (has_functional_unit)
                                         printDebugMessage("Has free SUB function unit, decoding");
                                     else
                                         printDebugMessage("No free SUB function unit, stopping");
 
                                     break;
 
-                                case MFHI:
-                                case MFLO:
-                                case MTHI:
-                                case MTLO:
-                                    if (has_functional_unit) // Temporary, should verify specific functional unit
-                                        printDebugMessage("Has free HILO function unit, decoding");
-                                    else
-                                        printDebugMessage("No free HILO function unit, stopping");
-
-                                    break;
-
                                 case MULT:
-                                    if (has_functional_unit) // Temporary, should verify specific functional unit
+                                    has_functional_unit = hasFuMul() && isRegFree(rd);
+                                    if (has_functional_unit)
                                         printDebugMessage("Has free MUL function unit, decoding");
                                     else
                                         printDebugMessage("No free MUL function unit, stopping");
@@ -174,7 +182,8 @@ void execution(){
                                     break;
 
                                 case DIV:
-                                    if (has_functional_unit) // Temporary, should verify specific functional unit
+                                    has_functional_unit = hasFuDiv() && isRegFree(rd);
+                                    if (has_functional_unit)
                                         printDebugMessage("Has free DIV function unit, decoding");
                                     else
                                         printDebugMessage("No free DIV function unit, stopping");
@@ -184,8 +193,8 @@ void execution(){
                                 case SYSCALL:
                                     printDebugMessage("Syscall, decoding");
 
-                                    code = instruction >> 6;
-                                    instruction = popQueue(&instruction_queue).instruction;
+                                    code = instruction >> (unsigned int)6;
+                                    instruction = popQueue(&instruction_queue).instruction->instruction;
 
                                     break;
 
@@ -197,19 +206,20 @@ void execution(){
                                     break;
                             }
 
-                            has_fu = has_functional_unit;
-                            has_functional_unit = !has_functional_unit;
+                            if (has_functional_unit) {
+                                instruction = popQueue(&instruction_queue).instruction->instruction;
 
-                            if (has_fu) {
-                                instruction = popQueue(&instruction_queue).instruction;
+                                rt = (instruction >> (unsigned int)16) & (unsigned int) 31;
+                                rs = (instruction >> (unsigned int)21) & (unsigned int) 31;
 
-                                rd = (instruction >> 11) & (unsigned int) 31;
-                                rt = (instruction >> 16) & (unsigned int) 31;
-                                rs = (instruction >> 21) & (unsigned int) 31;
+                                data.instruction = inst_data;
+                                data.instruction->instruction = instruction;
+                                data.instruction->op_type = op_type;
+                                data.instruction->op_code = op_code;
+                                data.instruction->rd = rd;
+                                data.instruction->rt = rt;
+                                data.instruction->rs = rs;
 
-                                // Register file read should happen here
-
-                                data.instruction = instruction;
                                 pushQueue(&decode_queue, data);
                             }
 
@@ -217,109 +227,89 @@ void execution(){
 
                         case OP_DECODE_1:
                             op_type = REGIMM;
-                            op_code = ((instruction >> 16) & (unsigned int) 31);
+                            op_code = ((instruction >> (unsigned int)16) & (unsigned int) 31);
 
-                            has_fu = has_functional_unit;
-                            has_functional_unit = !has_functional_unit;
+                            has_functional_unit = hasFuAdd();
 
-                            if (has_fu) {
-                                printDebugMessage("Has free ADD/LOGIC function unit, decoding");
+                            if (has_functional_unit) {
+                                printDebugMessage("Has free ADD/LOGIC/MOVE function unit, decoding");
 
-                                instruction = popQueue(&instruction_queue).instruction;
+                                instruction = popQueue(&instruction_queue).instruction->instruction;
 
-                                offset = instruction & (unsigned int) 65535;
-                                rs = (instruction >> 21) & (unsigned int) 31;
+                                offset = (uint16_t) instruction & (unsigned int) 65535;
+                                rs = (instruction >> (unsigned int)21) & (unsigned int) 31;
 
-                                // Register file read should happen here
+                                data.instruction = inst_data;
+                                data.instruction->instruction = instruction;
+                                data.instruction->op_type = op_type;
+                                data.instruction->op_code = op_code;
+                                data.instruction->rs = rs;
+                                data.instruction->imm = offset;
 
-                                data.instruction = instruction;
                                 pushQueue(&decode_queue, data);
                             }
                             else
-                                printDebugMessage("No free ADD/LOGIC function unit, stopping");
+                                printDebugMessage("No free ADD/LOGIC/MOVE function unit, stopping");
 
                             break;
 
                         case OP_DECODE_2:
                             op_type = SPECIAL2;
                             op_code = instruction & (unsigned int) 63;
+                            rd = (instruction >> (unsigned int)11) & (unsigned int) 31;
 
-                            switch (op_code) {
-                                case MADD:
-                                    if (has_functional_unit) // Temporary, should verify specific functional unit
-                                        printDebugMessage("Has free ADD/LOGIC function unit, decoding");
-                                    else
-                                        printDebugMessage("No free ADD/LOGIC function unit, stopping");
+                            has_functional_unit = hasFuMul() && isRegFree(rd);
 
-                                    break;
+                            if (has_functional_unit) {
+                                printDebugMessage("Has free MUL function unit, decoding");
 
-                                case MSUB:
-                                    if (has_functional_unit) // Temporary, should verify specific functional unit
-                                        printDebugMessage("Has free SUB function unit, decoding");
-                                    else
-                                        printDebugMessage("No free SUB function unit, stopping");
+                                instruction = popQueue(&instruction_queue).instruction->instruction;
 
-                                    break;
+                                rt = (instruction >> (unsigned int)16) & (unsigned int) 31;
+                                rs = (instruction >> (unsigned int)21) & (unsigned int) 31;
 
-                                case MUL:
-                                    if (has_functional_unit) // Temporary, should verify specific functional unit
-                                        printDebugMessage("Has free MUL function unit, decoding");
-                                    else
-                                        printDebugMessage("No free MUL function unit, stopping");
+                                data.instruction = inst_data;
+                                data.instruction->instruction = instruction;
+                                data.instruction->op_type = op_type;
+                                data.instruction->op_code = op_code;
+                                data.instruction->rd = rd;
+                                data.instruction->rt = rt;
+                                data.instruction->rs = rs;
 
-                                    break;
-
-                                default:
-                                    printDebugError("Execution Stage", "Op code not found");
-                                    has_functional_unit = 0;
-                                    error();
-
-                                    break;
-                            }
-
-                            has_fu = has_functional_unit;
-                            has_functional_unit = !has_functional_unit;
-
-                            if (has_fu) {
-                                instruction = popQueue(&instruction_queue).instruction;
-
-                                rd = (instruction >> 11) & (unsigned int) 31;
-                                rt = (instruction >> 16) & (unsigned int) 31;
-                                rs = (instruction >> 21) & (unsigned int) 31;
-
-                                // Register file read should happen here
-
-                                data.instruction = instruction;
                                 pushQueue(&decode_queue, data);
                             }
+                            else
+                                printDebugMessage("No free MUL function unit, decoding");
 
                             break;
 
                         default:
                             op_type = NONE;
-                            op_code = instruction >> 26;
+                            op_code = instruction >> (unsigned int)26;
+                            rt = (instruction >> (unsigned int)16) & (unsigned int) 31;
 
-                            has_fu = has_functional_unit;
-                            has_functional_unit = !has_functional_unit;
+                            has_functional_unit = hasFuAdd() && isRegFree(rd);
 
-                            if (has_fu) { // Temporary, should verify specific functional unit
-                                printDebugMessage("Has free ADD/LOGIC function unit, decoding");
+                            if (has_functional_unit) {
+                                printDebugMessage("Has free ADD/LOGIC/MOVE function unit, decoding");
 
-                                instruction = popQueue(&instruction_queue).instruction;
+                                instruction = popQueue(&instruction_queue).instruction->instruction;
 
                                 immediate = (uint16_t) (instruction & (unsigned int) 65535);
-                                rt = (instruction >> 16) & (unsigned int) 31;
-                                rs = (instruction >> 21) & (unsigned int) 31;
+                                rs = (instruction >> (unsigned int)21) & (unsigned int) 31;
 
-                                // Register file read should happen here
+                                data.instruction = inst_data;
+                                data.instruction->instruction = instruction;
+                                data.instruction->op_type = op_type;
+                                data.instruction->op_code = op_code;
+                                data.instruction->rt = rt;
+                                data.instruction->rs = rs;
+                                data.instruction->imm = immediate;
 
-                                data.instruction = instruction;
                                 pushQueue(&decode_queue, data);
-
-                                has_functional_unit = 0; // Temporary
                             }
                             else
-                                printDebugMessage("No free ADD/LOGIC function unit, stopping");
+                                printDebugMessage("No free ADD/LOGIC/MOVE function unit, stopping");
 
                             break;
                     }
@@ -338,10 +328,70 @@ void execution(){
             while (decode_queue.size) {
                 data = popQueue(&decode_queue);
 
-                printDebugMessage("Sending instruction to ALU");
-                // Should initiate the alu for each instruction
+                switch (data.instruction->op_type){
+                    case OP_DECODE_0:
+                        switch (data.instruction->op_code) {
+                            case ADD:
+                            case AND:
+                            case MOVN:
+                            case MOVZ:
+                            case MFHI:
+                            case MFLO:
+                            case MTHI:
+                            case MTLO:
+                            case NOP:
+                            case NOR:
+                            case OR:
+                            case XOR:
+                                printDebugMessage("Sending instruction to ALU (ADD/LOGIC/MOVE)");
+                                allocFuAdd(data.instruction);
+                                break;
+
+                            case SUB:
+                                printDebugMessage("Sending instruction to ALU (SUB)");
+                                allocFuSub(data.instruction);
+                                break;
+
+                            case MULT:
+                                printDebugMessage("Sending instruction to ALU (MUL)");
+                                allocFuMul(data.instruction);
+                                break;
+
+                            case DIV:
+                                printDebugMessage("Sending instruction to ALU (DIV)");
+                                allocFuDiv(data.instruction);
+                                break;
+
+                            case SYSCALL:
+                                printDebugMessage("Sending instruction to ALU (SYSCALL)");
+
+                                break;
+
+                            default:
+                                printDebugError("Execution Stage", "Op code not found");
+                                error();
+
+                                break;
+                        }
+                        break;
+                    case OP_DECODE_1:
+                        printDebugMessage("Sending instruction to ALU (ADD/LOGIC/MOVE)");
+                        allocFuAdd(data.instruction);
+                        break;
+                    case OP_DECODE_2:
+                        printDebugMessage("Sending instruction to ALU (MUL)");
+                        allocFuMul(data.instruction);
+                        break;
+                    default:
+                        printDebugMessage("Sending instruction to ALU (ADD/LOGIC/MOVE)");
+                        allocFuAdd(data.instruction);
+                        break;
+                }
             }
+
         }
+        runAlu();
+
 
         is_decode = 1;
     }
@@ -368,6 +418,7 @@ void updatePc(int next_pc){
 
 void cleanup(){
     clearQueue(&instruction_queue);
+    clearQueue(&decode_queue);
 }
 
 void error(){

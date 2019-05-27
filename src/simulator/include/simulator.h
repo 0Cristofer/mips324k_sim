@@ -1,7 +1,7 @@
 /* Mips32 4K simulator implementations file
    Authors: Cristofer Oswald
    Created: 29/03/2019
-   Edited: 17/04/2019 */
+   Edited: 27/05/2019 */
 
 #ifndef MIPS324K_SIM_SIMULATOR_H
 #define MIPS324K_SIM_SIMULATOR_H
@@ -9,12 +9,13 @@
 #include <stdint-gcc.h>
 
 #include "../../helpers/include/queue.h"
+#include "../../helpers/include/linked_list.h"
 
 #define OP_DECODE_0 0
 #define OP_DECODE_1 1
 #define OP_DECODE_2 28
 
-#define NUM_REGISTERS 32
+#define NUM_REGISTERS 34
 #define MAX_INST_QUEUE_SIZE 4
 #define MAX_DECODE_QUEUE_SIZE 2
 
@@ -33,7 +34,7 @@ enum op_types{
 };
 
 /**
- * Op codes, should be used with type check
+ * Op codes
  */
 enum op_codes{
     ADD = 32, ADDI = 8, AND = 36, ANDI = 12,
@@ -49,32 +50,28 @@ enum op_codes{
 };
 
 /**
- * Barrier between instruction and execution stages
+ * Main instrucion structure. Holds all information about a instruction and all fields are filled at the end of the
+ * decode stage
  */
-typedef struct{
+struct instruction_data{
+    unsigned int instruction;
+    unsigned int op_type, op_code;
     unsigned int rd, rs, rt;
-    unsigned int op_type, op_code, offset, code;
-    uint16_t immediate;
-}inst_barrier_t;
-
+    uint16_t imm;
+    unsigned int pc;
+    int is_speculate;
+    linked_list_t *speculative_insts;
+};
 
 // General simulator variables
 unsigned int running, num_instructions;
 extern int debug;
-
-/* Temporary */
-
-int has_functional_unit;
-
-/* Temporary */
 
 // Program specific
 unsigned int *instructions;
 unsigned int registers[NUM_REGISTERS];
 extern unsigned int pc;
 extern queue_t instruction_queue;
-queue_t decode_queue;
-inst_barrier_t inst_barrier;
 
 // General simulator functions
 
