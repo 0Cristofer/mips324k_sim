@@ -6,16 +6,30 @@ TODO:
 
 Problemas:
     Em que estágio cada etapa (emissão/leitura/execução/escrita) ocorrerá?
+        Primeira etapa da execução (decodificação) emite a instrução (aloca uma UF se possível), já a segunda
+        etapa (início da execução) lê os operandos e se estão livres, inicia a execução. A escrita ocorre no estágio
+        de writeback e depende do ROB
     Como lidar com syscall?
+        Syscall é pra ser apenas uma flag para parar a busca
     MOV é executado por qual UF?
+        De ADD
     Quando desvios tem a resposta real?
+        Ao final da execução
     O que os outros estágios fazem?
+        Alguns podem fazer nada pois não há memória. Verificar MUL
     Onde está a tabela com ciclos por instrução?
+        Professor irá verificar
     Como lidar com o NOP e SYSCALL?
+        NOP apenas passa pelo pipeline sem fazer nada
     MADD/MSUB usa MUL?
+        Usa o MUL apenas
     O que é fowarding?
+        A leitura de operandos ocorre diretamente no ROB, não precisa esperar os resultados serem escritos
     Como lidar com imediatos?
+        As instruções recebem valores e retornam valores, não registradores, então, a leitura de operandos apenas repassa
+        o valor do imediato
     As operações com os registradores é com ou sem sinal?
+        Sem sinal, sempre
 
 Notas:
     Questão do imediato está correto (verificado) até o PD
