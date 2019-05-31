@@ -1,7 +1,7 @@
 /* Mips32 4K simulator queue implementation
    Authors: Cristofer Oswald
    Created: 17/04/2019
-   Edited: 17/04/2019 */
+   Edited: 30/05/2019 */
 
 #include <stdlib.h>
 #include "src/helpers/include/queue.h"
@@ -47,6 +47,29 @@ queue_data_t popQueue(queue_t *queue){
 
         free(queue->head);
         queue->head = next_head;
+
+        queue->size = queue->size - 1;
+    }
+
+    return data;
+}
+
+queue_data_t popLastQueue(queue_t *queue){
+    queue_data_t data;
+    queue_element_t *next_tail;
+
+    data.instruction = 0;
+
+    if(queue->tail != NULL){
+        data = queue->tail->data;
+
+        next_tail = queue->tail->next;
+
+        if(next_tail == NULL) queue->head = NULL;
+        else next_tail->prev = NULL;
+
+        free(queue->tail);
+        queue->tail = next_tail;
 
         queue->size = queue->size - 1;
     }

@@ -1,7 +1,7 @@
 /* Mips32 4K simulator queue header file
    Authors: Cristofer Oswald
    Created: 17/04/2019
-   Edited: 17/04/2019 */
+   Edited: 30/05/2019 */
 
 #ifndef MIPS324K_SIM_QUEUE_H
 #define MIPS324K_SIM_QUEUE_H
@@ -59,6 +59,13 @@ void pushQueue(queue_t *queue, queue_data_t qd);
  * @return The data held by the queue
  */
 queue_data_t popQueue(queue_t *queue);
+
+/**
+ * Removes the last element of the queue
+ * @param queue The queue to be updated
+ * @return The date help by the queue
+ */
+queue_data_t popLastQueue(queue_t *queue);
 
 /**
  * Clears a queue, freeing all elements

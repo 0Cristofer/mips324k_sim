@@ -6,10 +6,10 @@
 #ifndef MIPS324K_SIM_ALU_H
 #define MIPS324K_SIM_ALU_H
 
-#define NUM_FU_MUL 2
-#define NUM_FU_DIV 2
-#define NUM_FU_SUB 1
-#define NUM_FU_ADD 3
+#define NUM_FU_MUL 2 //2
+#define NUM_FU_DIV 2 //2
+#define NUM_FU_SUB 1 //1
+#define NUM_FU_ADD 1 //1
 
 #define HI_REG 32
 #define LO_REG 33
@@ -25,10 +25,29 @@ struct functional_unit{
     int busy;
     int op;
     int fi, fj, fk;
+    int dj, dk;
     functional_unit_t *qj, *qk;
     int rj, rk;
     int cicles_to_end;
 };
+
+/*
+ * These maps are needed to map the instrucion code to the instrucion function array
+ */
+int mul_map[] = {2, -1, 1, -1, 3, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0};
+int div_map[] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+                 -1, 0};
+int sub_map[] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+                 -1, -1, -1, -1, -1, -1, -1, -1, -1, 0};
+int add_map[] = {12, 11, -1, -1, 15, 19, 18, 17, 13, -1, 5, 4, 14, 21, 22, 20, 2, 6, 3, 7, 16, -1, -1, -1, -1, -1,
+                 -1, -1, -1, -1, -1, -1, 0, -1, -1, -1, 1, 9, 10, 8};
+
+
+/* Number of cicles needed for each instruction */
+int cicles_mul[] = {4, 4, 4, 4};
+int cicles_div[] = {4};
+int cicles_sub[] = {2};
+int cicles_add[] = {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2};
 
 /**
  * Initiates the ALU. Should be called in the simulator initialization.
@@ -42,53 +61,31 @@ void initAlu();
  */
 int isRegFree(int r);
 
+void alocReg(int r, functional_unit_t* f);
+
 /**
  * Verifies if there a is MUL functional unit free
  * @return
  */
-int hasFuMul();
+functional_unit_t *hasFuMul();
 
 /**
  * Verifies if there a is DIV functional unit free
  * @return
  */
-int hasFuDiv();
+functional_unit_t *hasFuDiv();
 
 /**
  * Verifies if there a is SUB functional unit free
  * @return
  */
-int hasFuSub();
+functional_unit_t *hasFuSub();
 
 /**
  * Verifies if there a is ADD functional unit free
  * @return
  */
-int hasFuAdd();
-
-/**
- * Allocates a MUL functional unit, setting the necessary fields
- * @param instruction Instruction data necessary to the execution
- */
-void allocFuMul(instruction_data_t *instruction);
-
-/**
- * Allocates a DIV functional unit, setting the necessary fields
- * @param instruction Instruction data necessary to the execution
- */
-void allocFuDiv(instruction_data_t *instruction);
-
-/**
- * Allocates a SUB functional unit, setting the necessary fields
- * @param instruction Instruction data necessary to the execution
- */
-void allocFuSub(instruction_data_t *instruction);
-
-/**
- * Allocates a ADD functional unit, setting the necessary fields
- * @param instruction Instruction data necessary to the execution
- */
-void allocFuAdd(instruction_data_t *instruction);
+functional_unit_t *hasFuAdd();
 
 /**
  * Runs a cicle for each busy functional unit

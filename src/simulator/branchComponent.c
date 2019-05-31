@@ -28,6 +28,8 @@ void initBranchPredictor(){
  * @return The prediction
  */
 int twoBitPred(uint16_t index){
+    index = index & ((uint16_t)1023);
+
     if(index < pc){
         if(bht[index].is_new){
             bht[index].is_new = 0;
@@ -48,9 +50,7 @@ int twoBitPred(uint16_t index){
  * Reads the first 10 bits of the offset and uses it as an index for the branch predictor
  */
 int branchPredictor(uint16_t offset) {
-    uint16_t index = offset & ((uint16_t)1023);
-
-    if(twoBitPred(index) > 1){
+    if(twoBitPred(offset) > 1){
         return offset;
     }
 
@@ -77,6 +77,13 @@ int branchComponent(int current_pc) {
 
     switch (instruction >> (unsigned int)26){
         case OP_DECODE_0:
+            op_code = instruction & (unsigned int) 63;
+
+            if (op_code == SYSCALL){ // If the instruction is a SYSCALL set PC to the end of program to stop fetching
+                popLastQueue(&instruction_queue);
+                return num_instructions-current_pc;
+            }
+
         case OP_DECODE_2:
             addSpeculative(inst_data);
 
@@ -110,7 +117,7 @@ int branchComponent(int current_pc) {
                     offset = instruction & (unsigned int)67108863;
 
                     free(instruction_queue.tail->data.instruction);
-                    popQueue(&instruction_queue);
+                    popLastQueue(&instruction_queue);
                     next_pc = offset - current_pc;
 
                     printDebugMessageInt("to", offset);
@@ -128,7 +135,7 @@ int branchComponent(int current_pc) {
                         printDebugMessageInt("inconditional branch from", current_pc);
 
                         free(instruction_queue.tail->data.instruction);
-                        popQueue(&instruction_queue);
+                        popLastQueue(&instruction_queue);
                         next_pc = (int16_t)immediate;
 
                         printDebugMessageInt("to", current_pc+(int16_t)immediate);

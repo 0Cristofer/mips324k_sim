@@ -1,7 +1,7 @@
 /* Mips32 4K simulator assembly translator header
    Author: Cristofer Oswald
    Created: 17/03/2019
-   Edited: 02/04/2019 */
+   Edited: 30/05/2019 */
 
 #ifndef MIPS324K_SIM_PARSER_H
 #define MIPS324K_SIM_PARSER_H
@@ -52,7 +52,7 @@ void add2RegOffsetIns(unsigned int op_code, unsigned int rs, unsigned int rt);
 void add1RegOffsetIns(unsigned int op_code, unsigned int rs);
 void addOffsetIns(unsigned int op_code);
 
-void addSyscall(unsigned int op_code, unsigned int code);
+void addSyscall(unsigned int op_code);
 
 int newLabel(char* label);
 void useLabel(char *label);

@@ -10,6 +10,7 @@
 
 #include "../../helpers/include/queue.h"
 #include "../../helpers/include/linked_list.h"
+#include "alu.h"
 
 #define OP_DECODE_0 0
 #define OP_DECODE_1 1
@@ -60,6 +61,7 @@ struct instruction_data{
     uint16_t imm;
     unsigned int pc;
     int is_speculate;
+    functional_unit_t *f;
     linked_list_t *speculative_insts;
 };
 

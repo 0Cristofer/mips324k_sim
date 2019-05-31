@@ -1,7 +1,7 @@
 /* Mips32 4K simulator assembly translator helper functions
    Author: Cristofer Oswald
    Created: 17/03/2019
-   Edited: 02/04/2019 */
+   Edited: 30/05/2019 */
 
 #include <string.h>
 #include <stdlib.h>
@@ -176,10 +176,10 @@ void addOffsetIns(unsigned int op_code) {
     current_inst = current_inst + 1;
 }
 
-void addSyscall(unsigned int op_code, unsigned int code){
+void addSyscall(unsigned int op_code){
     addInst();
 
-    instructions[current_inst] = (code << (unsigned int)12) | op_code;
+    instructions[current_inst] = op_code;
 
     current_inst = current_inst + 1;
 }
