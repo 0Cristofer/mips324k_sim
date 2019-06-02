@@ -10,7 +10,6 @@
 
 #include "../../helpers/include/queue.h"
 #include "../../helpers/include/linked_list.h"
-#include "alu.h"
 
 #define OP_DECODE_0 0
 #define OP_DECODE_1 1
@@ -49,6 +48,8 @@ enum op_codes{
     SUB = 34, SYSCALL = 12,
     XOR = 38, XORI = 14
 };
+
+typedef struct functional_unit functional_unit_t;
 
 /**
  * Main instrucion structure. Holds all information about a instruction and all fields are filled at the end of the

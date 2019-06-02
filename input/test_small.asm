@@ -1,3 +1,2 @@
-    lui $t1, 10
-    lui $t1, 20
-    sub $t3, $t1, $t2
+    addi $t1, $t0, 10
+    addi $t2, $t3, 10

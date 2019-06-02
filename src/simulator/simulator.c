@@ -33,12 +33,12 @@ void startSimulation(unsigned int *insts, unsigned int num_insts, int b){
     initBranchPredictor();
 
     for(i = 0; i < NUM_REGISTERS; i++){
-        registers[i] = 1;
+        registers[i] = 0;
     }
 
     clock();
 
-    printDebugMessageInt("Register t3", registers[11]);
+    printDebugMessageInt("Register t1", registers[9]);
 
     cleanup();
 }
@@ -111,7 +111,7 @@ void execution(){
     queue_data_t data;
 
     unsigned int instruction, op_type, op_code, rd = 0, rt = 0, rs = 0, offset = 0;
-    int has_functional_unit = 1;
+    int has_functional_unit = 1, sent = 1;
     uint16_t immediate = 0;
     instruction_data_t *inst_data;
     functional_unit_t *f = NULL;
@@ -151,15 +151,59 @@ void execution(){
                                 case XOR:
                                 case MOVN:
                                 case MOVZ:
-                                case MFHI:
-                                case MFLO:
                                     f = hasFuAdd();
                                     has_functional_unit = (f != NULL) && isRegFree(rd);
+
                                     if (has_functional_unit) {
                                         printDebugMessage(
                                                 "Has free ADD/LOGIC/MOVE function unit (with dest), decoding");
                                         alocReg(rd, f);
-                                        f->busy = 1;
+
+                                        f->fi = 0;
+                                        f->fj = 0;
+                                        f->fk = 0;
+                                        f->cicles_to_end = cicles_add[add_map[op_code]];
+                                    }
+                                    else
+                                        printDebugMessage("No free ADD/LOGIC/MOVE function unit (with dest), stopping");
+
+                                    break;
+
+                                case MFHI:
+                                    f = hasFuAdd();
+                                    has_functional_unit = (f != NULL) && isRegFree(rd);
+
+                                    if (has_functional_unit) {
+                                        printDebugMessage(
+                                                "Has free ADD/LOGIC/MOVE function unit (with dest), decoding");
+                                        alocReg(rd, f);
+
+                                        f->fi = 0;
+                                        f->fj = HI_REG;
+                                        f->fk = -1;
+                                        f->rk = 1;
+
+                                        f->cicles_to_end = cicles_add[add_map[op_code]];
+                                    }
+                                    else
+                                        printDebugMessage("No free ADD/LOGIC/MOVE function unit (with dest), stopping");
+
+                                    break;
+
+                                case MFLO:
+                                    f = hasFuAdd();
+                                    has_functional_unit = (f != NULL) && isRegFree(rd);
+
+                                    if (has_functional_unit) {
+                                        printDebugMessage(
+                                                "Has free ADD/LOGIC/MOVE function unit (with dest), decoding");
+                                        alocReg(rd, f);
+
+                                        f->fi = 0;
+                                        f->fj = LO_REG;
+                                        f->fk = -1;
+                                        f->rk = 1;
+
                                         f->cicles_to_end = cicles_add[add_map[op_code]];
                                     }
                                     else
@@ -170,25 +214,36 @@ void execution(){
                                 case MTHI:
                                     f = hasFuAdd();
                                     has_functional_unit = (f != NULL) && isRegFree(HI_REG);
+
                                     if (has_functional_unit) {
                                         printDebugMessage(
                                                 "Has free ADD/LOGIC/MOVE function unit (with dest), decoding");
                                         alocReg(HI_REG, f);
-                                        f->busy = 1;
+
+                                        f->fi = 0;
+                                        f->fi = HI_REG;
+                                        f->fk = -1;
+                                        f->rk = 1;
                                         f->cicles_to_end = cicles_add[add_map[op_code]];
                                     }
                                     else
                                         printDebugMessage("No free ADD/LOGIC/MOVE function unit (with dest), stopping");
 
                                     break;
+
                                 case MTLO:
                                     f = hasFuAdd();
                                     has_functional_unit = (f != NULL) && isRegFree(LO_REG);
+
                                     if (has_functional_unit) {
                                         printDebugMessage(
                                                 "Has free ADD/LOGIC/MOVE function unit (with dest), decoding");
                                         alocReg(LO_REG, f);
-                                        f->busy = 1;
+
+                                        f->fi = LO_REG;
+                                        f->fj = 0;
+                                        f->fk = -1;
+                                        f->rk = 1;
                                         f->cicles_to_end = cicles_add[add_map[op_code]];
                                     }
                                     else
@@ -199,25 +254,34 @@ void execution(){
                                 case SUB:
                                     f = hasFuSub();
                                     has_functional_unit = (f != NULL) && isRegFree(rd);
+
                                     if (has_functional_unit) {
-                                        printDebugMessage("Has free SUB function unit, decoding");
+                                        printDebugMessage(
+                                                "Has free ADD/LOGIC/MOVE function unit (with dest), decoding");
                                         alocReg(rd, f);
-                                        f->busy = 1;
+
+                                        f->fi = 0;
+                                        f->fj = 0;
+                                        f->fk = 0;
                                         f->cicles_to_end = cicles_sub[sub_map[op_code]];
                                     }
                                     else
-                                        printDebugMessage("No free SUB function unit, stopping");
+                                        printDebugMessage("No free ADD/LOGIC/MOVE function unit (with dest), stopping");
 
                                     break;
 
                                 case MULT:
                                     f = hasFuMul();
                                     has_functional_unit = (f != NULL) && isRegFree(HI_REG) && isRegFree(LO_REG);
+
                                     if (has_functional_unit) {
                                         printDebugMessage("Has free MUL function unit (with dest), decoding");
                                         alocReg(HI_REG, f);
                                         alocReg(LO_REG, f);
-                                        f->busy = 1;
+
+                                        f->fi = -1;
+                                        f->fj = 0;
+                                        f->fk = 0;
                                         f->cicles_to_end = cicles_mul[mul_map[op_code]];
                                     }
                                     else
@@ -228,11 +292,15 @@ void execution(){
                                 case DIV:
                                     f = hasFuDiv();
                                     has_functional_unit = (f != NULL) && isRegFree(HI_REG) && isRegFree(LO_REG);
+
                                     if (has_functional_unit) {
                                         printDebugMessage("Has free DIV function unit (with dest), decoding");
                                         alocReg(HI_REG, f);
                                         alocReg(LO_REG, f);
-                                        f->busy = 1;
+
+                                        f->fi = -1;
+                                        f->fj = -1;
+                                        f->fk = -1;
                                         f->cicles_to_end = cicles_div[div_map[op_code]];
                                     }
                                     else
@@ -255,13 +323,28 @@ void execution(){
                                 rt = (instruction >> (unsigned int)16) & (unsigned int) 31;
                                 rs = (instruction >> (unsigned int)21) & (unsigned int) 31;
 
+                                f->busy = 1;
+                                f->instruction = inst_data;
+                                f->op = op_code;
+
+                                if(!f->fi) f->fi = rd;
+
+                                if(!f->fj){
+                                    f->fj = rs;
+                                    f->rj = 0;
+                                }
+                                if(!f->fk){
+                                    f->fk = rt;
+                                    f->rk = 0;
+                                }
+
                                 data.instruction = inst_data;
                                 data.instruction->instruction = instruction;
                                 data.instruction->op_type = op_type;
                                 data.instruction->op_code = op_code;
-                                data.instruction->rd = rd;
-                                data.instruction->rt = rt;
-                                data.instruction->rs = rs;
+                                data.instruction->rd  = f->fi;
+                                data.instruction->rs = f->fj;
+                                data.instruction->rt = f->fk;
 
                                 pushQueue(&decode_queue, data);
                             }
@@ -277,14 +360,23 @@ void execution(){
 
                             if (has_functional_unit) {
                                 printDebugMessage("Has free ADD/LOGIC/MOVE function unit (without dest), decoding");
-                                f->busy = 1;
-                                f->cicles_to_end = cicles_add[add_map[op_code]];
                                 inst_data->f = f;
 
                                 instruction = popQueue(&instruction_queue).instruction->instruction;
 
                                 offset = (uint16_t) instruction & (unsigned int) 65535;
                                 rs = (instruction >> (unsigned int)21) & (unsigned int) 31;
+
+                                f->busy = 1;
+                                f->instruction = inst_data;
+                                f->op = op_code;
+
+                                f->fi = -1;
+                                f->fj = rs;
+                                f->fk = -1;
+                                f->rj = 0;
+                                f->rk = 1;
+                                f->cicles_to_end = cicles_add[add_map[op_code]];
 
                                 data.instruction = inst_data;
                                 data.instruction->instruction = instruction;
@@ -315,8 +407,7 @@ void execution(){
                                 alocReg(HI_REG, f);
                                 alocReg(LO_REG, f);
                                 if(op_code == MUL) alocReg(rd, f);
-                                f->busy = 1;
-                                f->cicles_to_end = cicles_mul[mul_map[op_code]];
+
                                 inst_data->f = f;
 
                                 instruction = popQueue(&instruction_queue).instruction->instruction;
@@ -324,13 +415,24 @@ void execution(){
                                 rt = (instruction >> (unsigned int)16) & (unsigned int) 31;
                                 rs = (instruction >> (unsigned int)21) & (unsigned int) 31;
 
+                                f->busy = 1;
+                                f->instruction = inst_data;
+                                f->op = op_code;
+                                if(op_code == MUL) f->fi = rd;
+                                else f->fi = -1;
+                                f->fj = rs;
+                                f->fk = rt;
+                                f->rj = 0;
+                                f->rk = 0;
+                                f->cicles_to_end = cicles_mul[mul_map[op_code]];
+
                                 data.instruction = inst_data;
                                 data.instruction->instruction = instruction;
                                 data.instruction->op_type = op_type;
                                 data.instruction->op_code = op_code;
-                                data.instruction->rd = rd;
-                                data.instruction->rt = rt;
+                                data.instruction->rd = f->fi;
                                 data.instruction->rs = rs;
+                                data.instruction->rt = rt;
 
                                 pushQueue(&decode_queue, data);
                             }
@@ -356,7 +458,11 @@ void execution(){
                                         printDebugMessage(
                                                 "Has free ADD/LOGIC/MOVE function unit (with dest), decoding");
                                         alocReg(rt, f);
-                                        f->busy = 1;
+
+                                        f->fi = 0;
+                                        f->fj = 0;
+                                        f->fk = -1;
+                                        f->rk = 1;
                                     }
                                     else
                                         printDebugMessage("No free ADD/LOGIC/MOVE function unit (with dest), stopping");
@@ -365,20 +471,40 @@ void execution(){
 
                                 case BEQ:
                                 case BEQL:
-                                case BGTZ:
-                                case BLEZ:
                                 case BNE:
                                     f = hasFuAdd();
                                     has_functional_unit = (f != NULL);
                                     if (has_functional_unit) {
                                         printDebugMessage(
                                                 "Has free ADD/LOGIC/MOVE function unit (without dest), decoding");
-                                        f->busy = 1;
+
+                                        f->fi = -1;
+                                        f->fj = 0;
+                                        f->fk = 0;
                                     }
                                     else
                                         printDebugMessage("No free ADD/LOGIC/MOVE function unit (without dest), stopping");
 
                                     break;
+
+                                case BGTZ:
+                                case BLEZ:
+                                    f = hasFuAdd();
+                                    has_functional_unit = (f != NULL);
+                                    if (has_functional_unit) {
+                                        printDebugMessage(
+                                                "Has free ADD/LOGIC/MOVE function unit (without dest), decoding");
+
+                                        f->fi = -1;
+                                        f->fj = 0;
+                                        f->fk = -1;
+                                        f->rk = 1;
+                                    }
+                                    else
+                                        printDebugMessage("No free ADD/LOGIC/MOVE function unit (without dest), stopping");
+
+                                    break;
+
 
                                 default:
                                     printDebugError("Execution Stage", "Op code not found");
@@ -398,12 +524,28 @@ void execution(){
                                 immediate = (uint16_t) (instruction & (unsigned int) 65535);
                                 rs = (instruction >> (unsigned int)21) & (unsigned int) 31;
 
+                                f->busy = 1;
+                                f->instruction = inst_data;
+                                f->op = op_code;
+
+                                if(!f->fi) f->fi = rt;
+
+                                if(!f->fj){
+                                    f->fj = rs;
+                                    f->rj = 0;
+                                }
+                                if(!f->fk){
+                                    f->fk = rt;
+                                    f->rk = 0;
+                                }
+
                                 data.instruction = inst_data;
                                 data.instruction->instruction = instruction;
                                 data.instruction->op_type = op_type;
                                 data.instruction->op_code = op_code;
-                                data.instruction->rt = rt;
-                                data.instruction->rs = rs;
+                                data.instruction->rd  = f->fi;
+                                data.instruction->rs = f->fj;
+                                data.instruction->rt = f->fk;
                                 data.instruction->imm = immediate;
 
                                 pushQueue(&decode_queue, data);
@@ -423,8 +565,8 @@ void execution(){
             printDebugMessage("Decode queue is empety, skipping");
         }
         else {
-            while (decode_queue.size && (!has_error)) {
-                data = popQueue(&decode_queue);//decode_queue.head->data;
+            while (decode_queue.size && (!has_error) && sent) {
+                data = decode_queue.head->data;
 
                 switch (data.instruction->op_type){
                     case OP_DECODE_0:
@@ -438,126 +580,143 @@ void execution(){
                             case MOVZ:
                                 if(isRegFree(data.instruction->rs) && isRegFree(data.instruction->rt)) {
                                     printDebugMessage("Sending instruction (2 src) to ALU (ADD/LOGIC/MOVE)");
-                                    data.instruction->f->instruction = data.instruction;
-                                    data.instruction->f->op = data.instruction->op_code;
-                                    data.instruction->f->fi = data.instruction->rd;
-                                    data.instruction->f->fj = data.instruction->rs;
-                                    data.instruction->f->fk = data.instruction->rt;
-                                    data.instruction->f->rj = 0;
-                                    data.instruction->f->rk = 0;
+
+                                    data.instruction->f->rj = 1;
+                                    data.instruction->f->rk = 1;
                                     data.instruction->f->dj = registers[data.instruction->rs];
                                     data.instruction->f->dk = registers[data.instruction->rt];
+
+                                    sent = 1;
+                                    popQueue(&decode_queue);
                                 }
-                                else
+                                else {
                                     printDebugMessage("Registers no ready (2 src) to ALU (ADD/LOGIC/MOVE)");
+                                    sent = 0;
+                                }
 
                                 break;
 
                             case MTHI:
                                 if(isRegFree(data.instruction->rs)) {
                                     printDebugMessage("Sending instruction (1 src) to ALU (ADD/LOGIC/MOVE)");
-                                    data.instruction->f->instruction = data.instruction;
-                                    data.instruction->f->op = data.instruction->op_code;
-                                    data.instruction->f->fi = HI_REG;
-                                    data.instruction->f->fj = data.instruction->rs;
-                                    data.instruction->f->rj = 0;
+
+                                    data.instruction->f->rj = 1;
                                     data.instruction->f->dj = registers[data.instruction->rs];
+
+                                    sent = 1;
+                                    popQueue(&decode_queue);
                                 }
-                                else
+                                else {
                                     printDebugMessage("Registers no ready (1 src) to ALU (ADD/LOGIC/MOVE)");
+                                }
+
+                                break;
+
                             case MTLO:
                                 if(isRegFree(data.instruction->rs)) {
                                     printDebugMessage("Sending instruction (1 src) to ALU (ADD/LOGIC/MOVE)");
-                                    data.instruction->f->instruction = data.instruction;
-                                    data.instruction->f->op = data.instruction->op_code;
-                                    data.instruction->f->fi = LO_REG;
-                                    data.instruction->f->fj = data.instruction->rs;
-                                    data.instruction->f->rj = 0;
+
+                                    data.instruction->f->rj = 1;
                                     data.instruction->f->dj = registers[data.instruction->rs];
+
+                                    sent = 1;
+                                    popQueue(&decode_queue);
                                 }
-                                else
+                                else {
                                     printDebugMessage("Registers no ready (1 src) to ALU (ADD/LOGIC/MOVE)");
+                                    sent = 0;
+                                }
 
                                 break;
 
                             case MFHI:
                                 if(isRegFree(HI_REG)) {
                                     printDebugMessage("Sending instruction (1 src) to ALU (ADD/LOGIC/MOVE)");
-                                    data.instruction->f->instruction = data.instruction;
-                                    data.instruction->f->op = data.instruction->op_code;
-                                    data.instruction->f->fi = data.instruction->rd;
-                                    data.instruction->f->fj = HI_REG;
-                                    data.instruction->f->rj = 0;
+
+                                    data.instruction->f->rj = 1;
                                     data.instruction->f->dj = registers[HI_REG];
+
+                                    sent = 1;
+                                    popQueue(&decode_queue);
                                 }
-                                else
+                                else {
                                     printDebugMessage("Registers no ready (1 src) to ALU (ADD/LOGIC/MOVE)");
+                                    sent = 0;
+                                }
 
                                 break;
+
                             case MFLO:
                                 if(isRegFree(LO_REG)) {
                                     printDebugMessage("Sending instruction (1 src) to ALU (ADD/LOGIC/MOVE)");
-                                    data.instruction->f->instruction = data.instruction;
-                                    data.instruction->f->op = data.instruction->op_code;
-                                    data.instruction->f->fi = data.instruction->rd;
-                                    data.instruction->f->fj = LO_REG;
-                                    data.instruction->f->rj = 0;
+
+                                    data.instruction->f->rj = 1;
                                     data.instruction->f->dj = registers[LO_REG];
+
+                                    sent = 1;
+                                    popQueue(&decode_queue);
                                 }
-                                else
+                                else {
                                     printDebugMessage("Registers no ready (1 src) to ALU (ADD/LOGIC/MOVE)");
+                                    sent = 0;
+                                }
 
                                 break;
 
                             case SUB:
                                 if(isRegFree(data.instruction->rs) && isRegFree(data.instruction->rt)) {
                                     printDebugMessage("Sending instruction (2 src) to ALU (SUB)");
-                                    data.instruction->f->instruction = data.instruction;
-                                    data.instruction->f->op = data.instruction->op_code;
-                                    data.instruction->f->fi = data.instruction->rd;
-                                    data.instruction->f->fj = data.instruction->rs;
-                                    data.instruction->f->fk = data.instruction->rt;
-                                    data.instruction->f->rj = 0;
-                                    data.instruction->f->rk = 0;
+
+                                    data.instruction->f->rj = 1;
+                                    data.instruction->f->rk = 1;
                                     data.instruction->f->dj = registers[data.instruction->rs];
                                     data.instruction->f->dk = registers[data.instruction->rt];
+
+                                    sent = 1;
+                                    popQueue(&decode_queue);
                                 }
-                                else
+                                else {
                                     printDebugMessage("Registers no ready (2 src) to ALU (SUB)");
+                                    sent = 0;
+                                }
 
                                 break;
 
                             case MULT:
                                 if(isRegFree(data.instruction->rs) && isRegFree(data.instruction->rt)) {
                                     printDebugMessage("Sending instruction (2 src) to ALU (MUL)");
-                                    data.instruction->f->instruction = data.instruction;
-                                    data.instruction->f->op = data.instruction->op_code;
-                                    data.instruction->f->fj = data.instruction->rs;
-                                    data.instruction->f->fk = data.instruction->rt;
-                                    data.instruction->f->rj = 0;
-                                    data.instruction->f->rk = 0;
+
+                                    data.instruction->f->rj = 1;
+                                    data.instruction->f->rk = 1;
                                     data.instruction->f->dj = registers[data.instruction->rs];
                                     data.instruction->f->dk = registers[data.instruction->rt];
+
+                                    sent = 1;
+                                    popQueue(&decode_queue);
                                 }
-                                else
+                                else {
                                     printDebugMessage("Registers no ready (2 src) to ALU (MUL)");
+                                    sent = 0;
+                                }
 
                                 break;
 
                             case DIV:
                                 if(isRegFree(data.instruction->rs) && isRegFree(data.instruction->rt)) {
                                     printDebugMessage("Sending instruction (2 src) to ALU (DIV)");
-                                    data.instruction->f->instruction = data.instruction;
-                                    data.instruction->f->op = data.instruction->op_code;
-                                    data.instruction->f->fj = data.instruction->rs;
-                                    data.instruction->f->fk = data.instruction->rt;
-                                    data.instruction->f->rj = 0;
-                                    data.instruction->f->rk = 0;
+
+                                    data.instruction->f->rj = 1;
+                                    data.instruction->f->rk = 1;
                                     data.instruction->f->dj = registers[data.instruction->rs];
                                     data.instruction->f->dk = registers[data.instruction->rt];
+
+                                    sent = 1;
+                                    popQueue(&decode_queue);
                                 }
-                                else
+                                else {
                                     printDebugMessage("Registers no ready (2 src) to ALU (DIV)");
+                                    sent = 0;
+                                }
 
                                 break;
 
@@ -571,33 +730,40 @@ void execution(){
                     case OP_DECODE_1:
                         if(isRegFree(data.instruction->rs)) {
                             printDebugMessage("Sending instruction (1 src) to ALU (ADD/LOGIC/MOVE)");
-                            data.instruction->f->instruction = data.instruction;
-                            data.instruction->f->op = data.instruction->op_code;
-                            data.instruction->f->fj = data.instruction->rs;
-                            data.instruction->f->rj = 0;
+
+                            data.instruction->f->rj = 1;
                             data.instruction->f->dj = registers[data.instruction->rs];
+
+                            sent = 1;
+                            popQueue(&decode_queue);
                         }
-                        else
+                        else {
                             printDebugMessage("Registers no ready (2 src) to ALU (ADD/LOGIC/MOVE)");
+                            sent = 0;
+                        }
 
                         break;
+
                     case OP_DECODE_2:
-                        if(isRegFree(data.instruction->rs) && isRegFree(data.instruction->rt)) {
+                        if(isRegFree(data.instruction->rs) && isRegFree(data.instruction->rt) &&
+                            ((data.instruction->op_code == MUL) || (isRegFree(HI_REG) && isRegFree(LO_REG)))){
                             printDebugMessage("Sending instruction (2 src) to ALU (MUL)");
-                            data.instruction->f->instruction = data.instruction;
-                            data.instruction->f->op = data.instruction->op_code;
-                            if(data.instruction->op_code == MUL) data.instruction->f->fi = data.instruction->rd;
-                            data.instruction->f->fj = data.instruction->rs;
-                            data.instruction->f->fk = data.instruction->rt;
-                            data.instruction->f->rj = 0;
-                            data.instruction->f->rk = 0;
+
+                            data.instruction->f->rj = 1;
+                            data.instruction->f->rk = 1;
                             data.instruction->f->dj = registers[data.instruction->rs];
                             data.instruction->f->dk = registers[data.instruction->rt];
+
+                            sent = 1;
+                            popQueue(&decode_queue);
                         }
-                        else
+                        else {
                             printDebugMessage("Registers no ready (2 src) to ALU (MUL)");
+                            sent = 0;
+                        }
 
                         break;
+
                     default:
                         switch (data.instruction->op_code){
                             case ADDI:
@@ -607,17 +773,19 @@ void execution(){
                             case LUI:
                                 if(isRegFree(data.instruction->rs)) {
                                     printDebugMessage("Sending instruction (1 src + imm) to ALU (ADD/LOGIC/MOVE)");
-                                    data.instruction->f->instruction = data.instruction;
-                                    data.instruction->f->op = data.instruction->op_code;
-                                    data.instruction->f->fi = data.instruction->rt;
-                                    data.instruction->f->fj = data.instruction->rs;
-                                    data.instruction->f->rj = 0;
-                                    data.instruction->f->rk = 0;
+
+                                    data.instruction->f->rj = 1;
+
                                     data.instruction->f->dj = registers[data.instruction->rs];
                                     data.instruction->f->dk = data.instruction->imm;
+
+                                    sent = 1;
+                                    popQueue(&decode_queue);
                                 }
-                                else
+                                else {
                                     printDebugMessage("Registers no ready (1 src + imm) to ALU (ADD/LOGIC/MOVE)");
+                                    sent = 0;
+                                }
 
                                 break;
 
@@ -626,38 +794,42 @@ void execution(){
                             case BNE:
                                 if(isRegFree(data.instruction->rs) && isRegFree(data.instruction->rt)) {
                                     printDebugMessage("Sending instruction (2 src) to ALU (ADD/LOGIC/MOVE)");
-                                    data.instruction->f->instruction = data.instruction;
-                                    data.instruction->f->op = data.instruction->op_code;
-                                    data.instruction->f->fj = data.instruction->rs;
-                                    data.instruction->f->fk = data.instruction->rt;
-                                    data.instruction->f->rj = 0;
-                                    data.instruction->f->rk = 0;
+
+                                    data.instruction->f->rj = 1;
+                                    data.instruction->f->rk = 1;
                                     data.instruction->f->dj = registers[data.instruction->rs];
                                     data.instruction->f->dk = registers[data.instruction->rt];
+
+                                    sent = 1;
+                                    popQueue(&decode_queue);
                                 }
-                                else
+                                else {
                                     printDebugMessage("Registers no ready (2 src) to ALU (ADD/LOGIC/MOVE)");
+                                    sent = 0;
+                                }
 
                                 break;
+
                             case BGTZ:
                             case BLEZ:
                                 if(isRegFree(data.instruction->rs)) {
                                     printDebugMessage("Sending instruction (1 src) to ALU (ADD/LOGIC/MOVE)");
-                                    data.instruction->f->instruction = data.instruction;
-                                    data.instruction->f->op = data.instruction->op_code;
-                                    data.instruction->f->fj = data.instruction->rs;
-                                    data.instruction->f->rj = 0;
-                                    data.instruction->f->rk = 0;
+
+                                    data.instruction->f->rj = 1;
                                     data.instruction->f->dj = registers[data.instruction->rs];
+
+                                    sent = 1;
+                                    popQueue(&decode_queue);
                                 }
-                                else
+                                else {
                                     printDebugMessage("Registers no ready (1 src) to ALU (ADD/LOGIC/MOVE)");
+                                    sent = 0;
+                                }
 
                                 break;
 
                             default:
                                 printDebugError("Execution Stage", "Op code not found");
-                                has_functional_unit = 0;
                                 error();
 
                                 break;
@@ -667,11 +839,11 @@ void execution(){
             }
 
         }
-        runAlu();
-
 
         is_decode = 1;
     }
+
+    runAlu(); // Always run the ALU
 }
 
 void memory(){

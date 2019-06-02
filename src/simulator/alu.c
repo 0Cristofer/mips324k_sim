@@ -17,21 +17,31 @@ functional_unit_t fu_div[NUM_FU_DIV];
 functional_unit_t fu_sub[NUM_FU_SUB];
 functional_unit_t fu_add[NUM_FU_ADD];
 
-void add(int rd, int rs, int rt){
+int mul_map[] = {2, -1, 1, -1, 3, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0};
+int div_map[] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+                 -1, 0};
+int sub_map[] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+                 -1, -1, -1, -1, -1, -1, -1, -1, -1, 0};
+int add_map[] = {12, 11, -1, -1, 15, 19, 18, 17, 13, -1, 5, 4, 14, 21, 22, 20, 2, 6, 3, 7, 16, -1, -1, -1, -1, -1,
+                 -1, -1, -1, -1, -1, -1, 0, -1, -1, -1, 1, 9, 10, 8};
+
+int cicles_mul[] = {4, 4, 4, 4};
+int cicles_div[] = {4};
+int cicles_sub[] = {2};
+int cicles_add[] = {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2};
+
+int add(int rs, int rt){
     printDebugMessage("Running ADD");
 
-    registers[rd] = registers[rs] + registers[rt];
+    return rs + rt;
 }
 
-void addi(int rd, int rs, int rt){}
-
-void and(int rd, int rs, int rt){
+/*void and(int rd, int rs, int rt){
     printDebugMessage("Running AND");
 
     registers[rd] = registers[rs] & registers[rt];
 }
 
-void andi(int rd, int rs, int rt){}
 
 void beq(int rd, int rs, int rt){}
 
@@ -128,13 +138,20 @@ void xor(int rd, int rs, int rt){
     registers[rd] = registers[rs] ^ registers[rt];
 }
 
-void xori(int rd, int rs, int rt){}
+void xori(int rd, int rs, int rt){}*
 
 void (*inst_fun_mul[])(int, int, int) = {mult, mul, madd, msub};
 void (*inst_fun_div[])(int, int, int) = {dv};
 void (*inst_fun_sub[])(int, int, int) = {sub};
-void (*inst_fun_add[])(int, int, int) = {add, and, mfhi, mflo, movn, movz, mthi, mtlo, nor, or, xor, bgez, bltz, addi,
-                            andi, beq, beql, bgtz, blez, bne, lui, ori, xori};
+void (*inst_fun_add[])(int, int, int) = {add, and, mfhi, mflo, movn, movz, mthi, mtlo, nor, or, xor, bgez, bltz, add,
+                            and, beq, beql, bgtz, blez, bne, lui, or, xor};
+*/
+
+int (*inst_fun_mul[])(int, int) = {add, add, add, add};
+int (*inst_fun_div[])(int, int) = {add};
+int (*inst_fun_sub[])(int, int) = {add};
+int (*inst_fun_add[])(int, int) = {add, add, add, add, add, add, add, add, add, add, add, add, add, add,
+                                        add, add, add, add, add, add, add, add, add};
 
 void initAlu(){
     int i;
@@ -270,7 +287,7 @@ functional_unit_t *hasFuAdd() {
  */
 void runMul(int i){
     if(fu_mul[i].cicles_to_end == 1){
-        (*inst_fun_mul[mul_map[fu_mul[i].op]])(fu_mul[i].fi, fu_mul[i].fj, fu_mul[i].fk);
+        (*inst_fun_mul[mul_map[fu_mul[i].op]])(fu_mul[i].dj, fu_mul[i].dk);
 
         // Depois de executar, escrever no ROB
 
@@ -287,7 +304,7 @@ void runMul(int i){
  */
 void runDiv(int i){
     if(fu_div[i].cicles_to_end == 1){
-        (*inst_fun_div[div_map[fu_div[i].op]])(fu_div[i].fi, fu_div[i].fj, fu_div[i].fk);
+        (*inst_fun_div[div_map[fu_div[i].op]])(fu_div[i].dj, fu_div[i].dk);
 
         // Depois de executar, escrever no ROB
 
@@ -304,7 +321,7 @@ void runDiv(int i){
  */
 void runSub(int i){
     if(fu_sub[i].cicles_to_end == 1){
-        (*inst_fun_sub[sub_map[fu_sub[i].op]])(fu_sub[i].fi, fu_sub[i].fj, fu_sub[i].fk);
+        (*inst_fun_sub[sub_map[fu_sub[i].op]])(fu_sub[i].dj, fu_sub[i].dk);
 
         // Depois de executar, escrever no ROB
 
@@ -320,12 +337,14 @@ void runSub(int i){
  * @param i The index of the functional unit to be ran
  */
 void runAdd(int i){
+    int res;
     if(fu_add[i].cicles_to_end == 1){
-        (*inst_fun_add[add_map[fu_add[i].op]])(fu_add[i].fi, fu_add[i].fj, fu_add[i].fk);
+        res = (*inst_fun_add[add_map[fu_add[i].op]])(fu_add[i].dj, fu_add[i].dk);
 
         // Depois de executar, escrever no ROB
 
         fu_add[i].busy = 0;
+        registers[fu_add[i].fi] = res;
         reg_status[fu_add[i].fi] = NULL;
     }
     else{
@@ -336,27 +355,33 @@ void runAdd(int i){
 void runAlu(){
     int i;
 
+    printDebugMessage("Running ALU");
+
     for(i = 0; i < NUM_FU_MUL; i++) {
         if(!fu_mul[i].busy) continue;
 
-        runMul(i);
+        if(fu_mul[i].rj && fu_mul[i].rk)
+            runMul(i);
     }
 
     for(i = 0; i < NUM_FU_DIV; i++) {
         if(!fu_div[i].busy) continue;
 
-        runDiv(i);
+        if(fu_div[i].rj && fu_div[i].rk)
+            runDiv(i);
     }
 
     for(i = 0; i < NUM_FU_SUB; i++) {
         if(!fu_sub[i].busy) continue;
 
-        runSub(i);
+        if(fu_sub[i].rj && fu_sub[i].rk)
+            runSub(i);
     }
 
     for(i = 0; i < NUM_FU_ADD; i++) {
         if(!fu_add[i].busy) continue;
 
-        runAdd(i);
+        if(fu_add[i].rj && fu_add[i].rk)
+            runAdd(i);
     }
 }

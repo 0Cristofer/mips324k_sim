@@ -9,7 +9,7 @@
 #define NUM_FU_MUL 2 //2
 #define NUM_FU_DIV 2 //2
 #define NUM_FU_SUB 1 //1
-#define NUM_FU_ADD 1 //1
+#define NUM_FU_ADD 2 //1
 
 #define HI_REG 32
 #define LO_REG 33
@@ -34,20 +34,16 @@ struct functional_unit{
 /*
  * These maps are needed to map the instrucion code to the instrucion function array
  */
-int mul_map[] = {2, -1, 1, -1, 3, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0};
-int div_map[] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-                 -1, 0};
-int sub_map[] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
-                 -1, -1, -1, -1, -1, -1, -1, -1, -1, 0};
-int add_map[] = {12, 11, -1, -1, 15, 19, 18, 17, 13, -1, 5, 4, 14, 21, 22, 20, 2, 6, 3, 7, 16, -1, -1, -1, -1, -1,
-                 -1, -1, -1, -1, -1, -1, 0, -1, -1, -1, 1, 9, 10, 8};
-
+extern int mul_map[];
+extern int div_map[];
+extern int sub_map[];
+extern int add_map[];
 
 /* Number of cicles needed for each instruction */
-int cicles_mul[] = {4, 4, 4, 4};
-int cicles_div[] = {4};
-int cicles_sub[] = {2};
-int cicles_add[] = {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2};
+extern int cicles_mul[];
+extern int cicles_div[];
+extern int cicles_sub[];
+extern int cicles_add[];
 
 /**
  * Initiates the ALU. Should be called in the simulator initialization.

@@ -1,10 +1,11 @@
 TODO:
     - Ler o nome do program AKA ler o nome do arquivo de entrada até o ponto '.'
     - Fazer arquivo de saída final
-    - Atribuição dos campos do scoreboarding está invertida, deveria ocorrer na emissão, mas está ocorrendo na leitura
     - Alterar instruções para ler valores e retornar o resultado
-    - Ver verificação de FU para execução
     - Ver liberação da FU
+    - ROB
+    - Corrigir bug de quando o registrador de saída é o mesmo de entrada
+    - RunAdd tem código de debug
 
 Problemas:
     Em que estágio cada etapa (emissão/leitura/execução/escrita) ocorrerá?
