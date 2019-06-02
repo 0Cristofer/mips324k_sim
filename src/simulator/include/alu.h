@@ -9,7 +9,7 @@
 #define NUM_FU_MUL 2 //2
 #define NUM_FU_DIV 2 //2
 #define NUM_FU_SUB 1 //1
-#define NUM_FU_ADD 2 //1
+#define NUM_FU_ADD 1 //1
 
 #define HI_REG 32
 #define LO_REG 33
@@ -86,6 +86,6 @@ functional_unit_t *hasFuAdd();
 /**
  * Runs a cicle for each busy functional unit
  */
-void runAlu();
+int runAlu();
 
 #endif //MIPS324K_SIM_ALU_H

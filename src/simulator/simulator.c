@@ -118,8 +118,6 @@ void execution(){
 
     if(has_error) return;
 
-    if((!instruction_queue.size) && (!decode_queue.size) && (pc == num_instructions)) running = 0; // Temporary
-
     if(is_decode){
         printDebugMessage("---Execution stage (Decode/Reg)---");
 
@@ -257,7 +255,7 @@ void execution(){
 
                                     if (has_functional_unit) {
                                         printDebugMessage(
-                                                "Has free ADD/LOGIC/MOVE function unit (with dest), decoding");
+                                                "Has free SUB function unit (with dest), decoding");
                                         alocReg(rd, f);
 
                                         f->fi = 0;
@@ -266,7 +264,7 @@ void execution(){
                                         f->cicles_to_end = cicles_sub[sub_map[op_code]];
                                     }
                                     else
-                                        printDebugMessage("No free ADD/LOGIC/MOVE function unit (with dest), stopping");
+                                        printDebugMessage("No free SUB function unit (with dest), stopping");
 
                                     break;
 
@@ -578,7 +576,8 @@ void execution(){
                             case XOR:
                             case MOVN:
                             case MOVZ:
-                                if(isRegFree(data.instruction->rs) && isRegFree(data.instruction->rt)) {
+                                if((isRegFree(data.instruction->rs) || (data.instruction->rs == data.instruction->rd))&&
+                                   (isRegFree(data.instruction->rt) || (data.instruction->rt == data.instruction->rd))){
                                     printDebugMessage("Sending instruction (2 src) to ALU (ADD/LOGIC/MOVE)");
 
                                     data.instruction->f->rj = 1;
@@ -664,7 +663,8 @@ void execution(){
                                 break;
 
                             case SUB:
-                                if(isRegFree(data.instruction->rs) && isRegFree(data.instruction->rt)) {
+                                if((isRegFree(data.instruction->rs) || (data.instruction->rs == data.instruction->rd))&&
+                                   (isRegFree(data.instruction->rt) || (data.instruction->rt == data.instruction->rd))) {
                                     printDebugMessage("Sending instruction (2 src) to ALU (SUB)");
 
                                     data.instruction->f->rj = 1;
@@ -683,7 +683,8 @@ void execution(){
                                 break;
 
                             case MULT:
-                                if(isRegFree(data.instruction->rs) && isRegFree(data.instruction->rt)) {
+                                if((isRegFree(data.instruction->rs) || (data.instruction->rs == data.instruction->rd))&&
+                                   (isRegFree(data.instruction->rt) || (data.instruction->rt == data.instruction->rd))){
                                     printDebugMessage("Sending instruction (2 src) to ALU (MUL)");
 
                                     data.instruction->f->rj = 1;
@@ -702,7 +703,8 @@ void execution(){
                                 break;
 
                             case DIV:
-                                if(isRegFree(data.instruction->rs) && isRegFree(data.instruction->rt)) {
+                                if((isRegFree(data.instruction->rs) || (data.instruction->rs == data.instruction->rd))&&
+                                   (isRegFree(data.instruction->rt) || (data.instruction->rt == data.instruction->rd))){
                                     printDebugMessage("Sending instruction (2 src) to ALU (DIV)");
 
                                     data.instruction->f->rj = 1;
@@ -745,23 +747,39 @@ void execution(){
                         break;
 
                     case OP_DECODE_2:
-                        if(isRegFree(data.instruction->rs) && isRegFree(data.instruction->rt) &&
-                            ((data.instruction->op_code == MUL) || (isRegFree(HI_REG) && isRegFree(LO_REG)))){
-                            printDebugMessage("Sending instruction (2 src) to ALU (MUL)");
+                        if(data.instruction->op_code == MUL) {
+                            if((isRegFree(data.instruction->rs) || (data.instruction->rs == data.instruction->rd))&&
+                               (isRegFree(data.instruction->rt) || (data.instruction->rt == data.instruction->rd))){
+                                printDebugMessage("Sending instruction (2 src) to ALU (MUL)");
 
-                            data.instruction->f->rj = 1;
-                            data.instruction->f->rk = 1;
-                            data.instruction->f->dj = registers[data.instruction->rs];
-                            data.instruction->f->dk = registers[data.instruction->rt];
+                                data.instruction->f->rj = 1;
+                                data.instruction->f->rk = 1;
+                                data.instruction->f->dj = registers[data.instruction->rs];
+                                data.instruction->f->dk = registers[data.instruction->rt];
 
-                            sent = 1;
-                            popQueue(&decode_queue);
+                                sent = 1;
+                                popQueue(&decode_queue);
+                            } else {
+                                printDebugMessage("Registers no ready (2 src) to ALU (MUL)");
+                                sent = 0;
+                            }
                         }
-                        else {
-                            printDebugMessage("Registers no ready (2 src) to ALU (MUL)");
-                            sent = 0;
-                        }
+                        else{
+                            if (isRegFree(data.instruction->rs) && isRegFree(data.instruction->rt)) {
+                                printDebugMessage("Sending instruction (2 src) to ALU (MUL)");
 
+                                data.instruction->f->rj = 1;
+                                data.instruction->f->rk = 1;
+                                data.instruction->f->dj = registers[data.instruction->rs];
+                                data.instruction->f->dk = registers[data.instruction->rt];
+
+                                sent = 1;
+                                popQueue(&decode_queue);
+                            } else {
+                                printDebugMessage("Registers no ready (2 src) to ALU (MUL)");
+                                sent = 0;
+                            }
+                        }
                         break;
 
                     default:
@@ -771,7 +789,7 @@ void execution(){
                             case ORI:
                             case XORI:
                             case LUI:
-                                if(isRegFree(data.instruction->rs)) {
+                                if(isRegFree(data.instruction->rs) || (data.instruction->rs == data.instruction->rd)){
                                     printDebugMessage("Sending instruction (1 src + imm) to ALU (ADD/LOGIC/MOVE)");
 
                                     data.instruction->f->rj = 1;
@@ -792,7 +810,8 @@ void execution(){
                             case BEQ:
                             case BEQL:
                             case BNE:
-                                if(isRegFree(data.instruction->rs) && isRegFree(data.instruction->rt)) {
+                                if((isRegFree(data.instruction->rs) || (data.instruction->rs == data.instruction->rd))&&
+                                   (isRegFree(data.instruction->rt) || (data.instruction->rt == data.instruction->rd))){
                                     printDebugMessage("Sending instruction (2 src) to ALU (ADD/LOGIC/MOVE)");
 
                                     data.instruction->f->rj = 1;
@@ -812,7 +831,7 @@ void execution(){
 
                             case BGTZ:
                             case BLEZ:
-                                if(isRegFree(data.instruction->rs)) {
+                                if(isRegFree(data.instruction->rs) || (data.instruction->rs == data.instruction->rd)){
                                     printDebugMessage("Sending instruction (1 src) to ALU (ADD/LOGIC/MOVE)");
 
                                     data.instruction->f->rj = 1;
@@ -843,7 +862,8 @@ void execution(){
         is_decode = 1;
     }
 
-    runAlu(); // Always run the ALU
+    // Always run the ALU, if queues are empety and nothing ran, stop running
+    running = runAlu() || (!((!instruction_queue.size) && (!decode_queue.size) && (pc == num_instructions)));
 }
 
 void memory(){

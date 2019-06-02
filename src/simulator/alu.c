@@ -28,7 +28,8 @@ int add_map[] = {12, 11, -1, -1, 15, 19, 18, 17, 13, -1, 5, 4, 14, 21, 22, 20, 2
 int cicles_mul[] = {4, 4, 4, 4};
 int cicles_div[] = {4};
 int cicles_sub[] = {2};
-int cicles_add[] = {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2};
+int cicles_add[] = {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3,
+                    2, 2, 2, 2, 2, 2, 2, 2, 2};
 
 int add(int rs, int rt){
     printDebugMessage("Running ADD");
@@ -36,122 +37,170 @@ int add(int rs, int rt){
     return rs + rt;
 }
 
-/*void and(int rd, int rs, int rt){
+int and(int rs, int rt){
     printDebugMessage("Running AND");
 
-    registers[rd] = registers[rs] & registers[rt];
+    return rs & rt;
 }
 
 
-void beq(int rd, int rs, int rt){}
+int beq(int rs, int rt){
+    printDebugMessage("Running BEQ");
 
-void beql(int rd, int rs, int rt){}
+    return rs == rt;
+}
 
-void bgez(int rd, int rs, int rt){}
+int beql(int rs, int rt){
+    printDebugMessage("Running BEQL");
 
-void bgtz(int rd, int rs, int rt){}
+    return rs == rt;
+}
 
-void blez(int rd, int rs, int rt){}
+int bgez(int rs, int rt){
+    printDebugMessage("Running BGEZ");
 
-void bltz(int rd, int rs, int rt){}
+    return (rs > 0) || (rs == 0);
+}
 
-void bne(int rd, int rs, int rt){}
+int bgtz(int rs, int rt){
+    printDebugMessage("Running BGTZ");
 
-void dv(int rd, int rs, int rt){
+    return rs > 0;
+}
+
+int blez(int rs, int rt){
+    printDebugMessage("Running BLEZ");
+
+    return (rs < 0) || (rs == 0);
+}
+
+int bltz(int rs, int rt){
+    printDebugMessage("Running BLTZ");
+
+    return rs < 0;
+}
+
+int bne(int rs, int rt){
+    printDebugMessage("Running BNE");
+
+    return rs != rt;
+}
+
+/* TODO */
+int dv(int rs, int rt){
     printDebugMessage("Running DIV");
 
-    registers[LO_REG] = registers[rs] / registers[rt];
-    registers[HI_REG] = registers[rs] % registers[rt];
+    registers[LO_REG] = rs / rt;
+    registers[HI_REG] = rs % rt;
+
+    return rs / rt;
 }
 
-void lui(int rd, int rs, int rt){
+int lui(int rs, int rt){
     printDebugMessage("Running LUI");
+
+    return rs;
 }
 
-void madd(int rd, int rs, int rt){}
+/* TODO */
+int madd(int rs, int rt){
+    printDebugMessage("Running MADD");
 
-void mfhi(int rd, int rs, int rt){
+    return rs;
+}
+
+/* TODO */
+int mfhi(int rs, int rt){
     printDebugMessage("Running MFHI");
 
-    registers[rd] = registers[HI_REG];
+    return rs;
 }
 
-void mflo(int rd, int rs, int rt){
+/* TODO */
+int mflo(int rs, int rt){
     printDebugMessage("Running MFLO");
 
-    registers[rd] = registers[LO_REG];
+    return rs;
 }
 
-void movn(int rd, int rs, int rt){
+/* TODO */
+int movn(int rs, int rt){
     printDebugMessage("Running MOVN");
 
-    if(registers[rt]) registers[rd] = registers[rs];
+    return rs;
 }
 
-void movz(int rd, int rs, int rt){
+/* TODO */
+int movz(int rs, int rt){
     printDebugMessage("Running MOVZ");
 
-    if(!registers[rt]) registers[rd] = registers[rs];
+    return rs;
 }
 
-void msub(int rd, int rs, int rt){}
+/* TODO */
+int msub(int rs, int rt){
+    printDebugMessage("Running MSUB");
 
-void mthi(int rd, int rs, int rt){
+    return rs;
+}
+
+/* TODO */
+int mthi(int rs, int rt){
     printDebugMessage("Running MTHI");
 
-    registers[HI_REG] = registers[rs];
+    return rs;
 }
 
-void mtlo(int rd, int rs, int rt){
+/* TODO */
+int mtlo(int rs, int rt){
     printDebugMessage("Running MTLO");
 
-    registers[LO_REG] = registers[rs];
+    return rs;
 }
 
-void mul(int rd, int rs, int rt){}
+int mul(int rs, int rt){
+    printDebugMessage("Running MUL");
 
-void mult(int rd, int rs, int rt){}
+    return rs * rt;
+}
 
-void nor(int rd, int rs, int rt){
+/* TODO */
+int mult(int rs, int rt){
+    printDebugMessage("Running MULT");
+
+    return rs;
+}
+
+int nor(int rs, int rt){
     printDebugMessage("Running NOR");
 
-    registers[rd] = ~(registers[rs] | registers[rt]);
+    return ~(rs | rt);
 }
 
-void or(int rd, int rs, int rt){
+int or(int rs, int rt){
     printDebugMessage("Running OR");
 
-    registers[rd] = registers[rs] | registers[rt];
+    return rs | rt;
 }
 
-void ori(int rd, int rs, int rt){}
-
-void sub(int rd, int rs, int rt){
+int sub(int rs, int rt){
     printDebugMessage("Running SUB");
 
-    registers[rd] = registers[rs] - registers[rt];
+    return rs - rt;
 }
 
-void xor(int rd, int rs, int rt){
+int xor(int rs, int rt){
     printDebugMessage("Running XOR");
 
-    registers[rd] = registers[rs] ^ registers[rt];
+    return rs ^ rt;
 }
 
-void xori(int rd, int rs, int rt){}*
 
-void (*inst_fun_mul[])(int, int, int) = {mult, mul, madd, msub};
-void (*inst_fun_div[])(int, int, int) = {dv};
-void (*inst_fun_sub[])(int, int, int) = {sub};
-void (*inst_fun_add[])(int, int, int) = {add, and, mfhi, mflo, movn, movz, mthi, mtlo, nor, or, xor, bgez, bltz, add,
+int (*inst_fun_mul[])(int, int) = {mult, mul, madd, msub};
+int (*inst_fun_div[])(int, int) = {dv};
+int (*inst_fun_sub[])(int, int) = {sub};
+int (*inst_fun_add[])(int, int) = {add, and, mfhi, mflo, movn, movz, mthi, mtlo, nor, or, xor, bgez, bltz, add,
                             and, beq, beql, bgtz, blez, bne, lui, or, xor};
-*/
-
-int (*inst_fun_mul[])(int, int) = {add, add, add, add};
-int (*inst_fun_div[])(int, int) = {add};
-int (*inst_fun_sub[])(int, int) = {add};
-int (*inst_fun_add[])(int, int) = {add, add, add, add, add, add, add, add, add, add, add, add, add, add,
-                                        add, add, add, add, add, add, add, add, add};
 
 void initAlu(){
     int i;
@@ -352,13 +401,15 @@ void runAdd(int i){
     }
 }
 
-void runAlu(){
-    int i;
+int runAlu(){
+    int i, ran = 0;
 
     printDebugMessage("Running ALU");
 
     for(i = 0; i < NUM_FU_MUL; i++) {
         if(!fu_mul[i].busy) continue;
+
+        ran = 1;
 
         if(fu_mul[i].rj && fu_mul[i].rk)
             runMul(i);
@@ -367,12 +418,16 @@ void runAlu(){
     for(i = 0; i < NUM_FU_DIV; i++) {
         if(!fu_div[i].busy) continue;
 
+        ran = 1;
+
         if(fu_div[i].rj && fu_div[i].rk)
             runDiv(i);
     }
 
     for(i = 0; i < NUM_FU_SUB; i++) {
         if(!fu_sub[i].busy) continue;
+
+        ran = 1;
 
         if(fu_sub[i].rj && fu_sub[i].rk)
             runSub(i);
@@ -381,7 +436,11 @@ void runAlu(){
     for(i = 0; i < NUM_FU_ADD; i++) {
         if(!fu_add[i].busy) continue;
 
+        ran = 1;
+
         if(fu_add[i].rj && fu_add[i].rk)
             runAdd(i);
     }
+
+    return ran;
 }

@@ -1,10 +1,8 @@
 TODO:
     - Ler o nome do program AKA ler o nome do arquivo de entrada até o ponto '.'
     - Fazer arquivo de saída final
-    - Alterar instruções para ler valores e retornar o resultado
     - Ver liberação da FU
     - ROB
-    - Corrigir bug de quando o registrador de saída é o mesmo de entrada
     - RunAdd tem código de debug
 
 Problemas:
@@ -25,3 +23,7 @@ Notas:
     Questão do imediato está correto (verificado) até o PD
     Syscall é pra ser apenas uma flag para parar a busca
     As operações com os registradores é sem sinal
+    ROB:
+        FIFO
+        Quando uma instrução é imetida, aloca espaço no fim do ROB e armazena o ponteiro para a entrada do ROB
+        na instrução. Quando termina de executar, atualiza a entrada do ROB
