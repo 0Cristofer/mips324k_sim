@@ -2,6 +2,8 @@ TODO:
     - Ler o nome do program AKA ler o nome do arquivo de entrada até o ponto '.'
     - Fazer arquivo de saída final
     - Ver liberação da FU
+    - No estágio de allign cuidar de coisas como HILO
+    - Escrita no ROB ocorre no writeback, adicionar estágio para efetivação
     - ROB
     - RunAdd tem código de debug
 
