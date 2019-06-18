@@ -12,16 +12,26 @@ Problemas:
         Armazenar o resultado e o estado da entrada (ready, especulativo, etc)
         Quando a instrução termina de executar, deixa busy como 1 e os ciclos como 0, ou utilizar 2 "readys", um para o ROB
         e outro para quando a UF está pronta
+            Entrada do ROB: um registrador de saída (pode ser uma flag), o resultado e o estado (ready/especulaivo/etc)
+            Escrita na entrada do ROB acontece depois da execução e em outro estágio. Se terminar de executar (runXxx, cicles==1)
+            no 5, irá escrever no estágio de writeback no 6.
         Writeback itera sobre as UFs vendo quais tem as condições acima e escreve o resultado na entrada do ROB
+            Exatamente isso.
     Quando alterar estado de instruções especulativas para não especulativas? No estágio de efetivação?
         Para utilziar a ideia acima, fazer uma flag para quando é branch e se o registrador de saída na efetivação for essa flag
         atualizar as instruções "filhas". O resultado seria 1 ou 0. Para o caso de 0, voltar alterar o PC para o estado
         anterior ao branch
+            Fazer isso. A atualização acontece na escrita (writeback). Utilizando o exemplo antrior, no ciclo 6.
     Como lidar com instruções que utilizam mais de um registrador de saída?
+            Fazer uma flag no registrador de saída. Dependendo da flag, eu sei que tem mais de um registrador (HI e LO),
+            ou que é um registrador desses (HI ou LO).
     LUI escreve o imediato no registrador apenas na efetivação?
+        Sim.
     Como lidar com moves condicionais?
         Se for falso, escrever no registrador o dele mesmo? Ou descartar a instrução?
+            Escrever o valor dele mesmo.
     Como implementar o fowarding/bypass?
+        Ainda não sei rs.
 
 
     Em que estágio cada etapa (emissão/leitura/execução/escrita) ocorrerá?
