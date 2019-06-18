@@ -17,6 +17,7 @@ int has_error = 0;
 unsigned int pc;
 queue_t instruction_queue;
 queue_t decode_queue;
+queue_t rob_queue;
 
 void startSimulation(unsigned int *insts, unsigned int num_insts, int b){
     int i;
@@ -29,6 +30,7 @@ void startSimulation(unsigned int *insts, unsigned int num_insts, int b){
 
     initQueue(&instruction_queue);
     initQueue(&decode_queue);
+    initQueue(&rob_queue);
     initAlu();
     initBranchPredictor();
 
@@ -94,6 +96,7 @@ void instruction(){
         data.instruction->instruction = instructions[pc];
         data.instruction->speculative_insts = NULL;
         data.instruction->is_speculate = 0;
+        data.instruction->is_ready = 0;
         data.instruction->pc = pc;
 
         printDebugMessageInt("\tFetched instruction", pc);
@@ -125,7 +128,7 @@ void execution(){
             printDebugMessage("Instruction queue is empety, skipping");
         }
         else {
-            while ((decode_queue.size < MAX_DECODE_QUEUE_SIZE) && has_functional_unit) {
+            while ((decode_queue.size < MAX_DECODE_QUEUE_SIZE) && has_functional_unit && (rob_queue.size < MAX_ROB_QUEUE_SIZE)){
                 if (!instruction_queue.size) {
                     printDebugMessage("Out of instructions. Stopping decode");
                     break;
@@ -345,6 +348,7 @@ void execution(){
                                 data.instruction->rt = f->fk;
 
                                 pushQueue(&decode_queue, data);
+                                pushQueue(&rob_queue, data);
                             }
 
                             break;
@@ -383,6 +387,7 @@ void execution(){
                                 data.instruction->rs = rs;
                                 data.instruction->imm = offset;
 
+                                pushQueue(&rob_queue, data);
                                 pushQueue(&decode_queue, data);
                             }
                             else
@@ -432,6 +437,7 @@ void execution(){
                                 data.instruction->rs = rs;
                                 data.instruction->rt = rt;
 
+                                pushQueue(&rob_queue, data);
                                 pushQueue(&decode_queue, data);
                             }
                             else
@@ -546,6 +552,7 @@ void execution(){
                                 data.instruction->rt = f->fk;
                                 data.instruction->imm = immediate;
 
+                                pushQueue(&rob_queue, data);
                                 pushQueue(&decode_queue, data);
                             }
 
@@ -877,8 +884,23 @@ void alignAccumulate(){
 }
 
 void writeback(){
+    queue_data_t data;
+
     if(has_error) return;
     printDebugMessage("---Writeback Stage---");
+
+    while(rob_queue.size){
+        data = rob_queue.head->data;
+
+        if(data.instruction->is_speculate || (!data.instruction->is_ready)){
+            printDebugMessage("Instruction is not ready or is still speculative");
+            break;
+        }
+
+        printDebugMessageInt("Commited instruction", data.instruction->pc);
+
+        popQueue(&rob_queue);
+    }
 }
 
 void updatePc(int next_pc){

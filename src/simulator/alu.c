@@ -392,6 +392,8 @@ void runAdd(int i){
 
         // Depois de executar, escrever no ROB
 
+        fu_add[i].instruction->is_ready = 1;
+
         fu_add[i].busy = 0;
         registers[fu_add[i].fi] = res;
         reg_status[fu_add[i].fi] = NULL;

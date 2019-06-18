@@ -4,10 +4,26 @@ TODO:
     - Ver liberação da FU
     - No estágio de allign cuidar de coisas como HILO
     - Escrita no ROB ocorre no writeback, adicionar estágio para efetivação
-    - ROB
+    - ROB iniciado, ver passagem de dados entre unidade funcional e ROB
     - RunAdd tem código de debug
 
 Problemas:
+    Falar a ideia de implementação de escrita no ROB:
+        Armazenar o resultado e o estado da entrada (ready, especulativo, etc)
+        Quando a instrução termina de executar, deixa busy como 1 e os ciclos como 0, ou utilizar 2 "readys", um para o ROB
+        e outro para quando a UF está pronta
+        Writeback itera sobre as UFs vendo quais tem as condições acima e escreve o resultado na entrada do ROB
+    Quando alterar estado de instruções especulativas para não especulativas? No estágio de efetivação?
+        Para utilziar a ideia acima, fazer uma flag para quando é branch e se o registrador de saída na efetivação for essa flag
+        atualizar as instruções "filhas". O resultado seria 1 ou 0. Para o caso de 0, voltar alterar o PC para o estado
+        anterior ao branch
+    Como lidar com instruções que utilizam mais de um registrador de saída?
+    LUI escreve o imediato no registrador apenas na efetivação?
+    Como lidar com moves condicionais?
+        Se for falso, escrever no registrador o dele mesmo? Ou descartar a instrução?
+    Como implementar o fowarding/bypass?
+
+
     Em que estágio cada etapa (emissão/leitura/execução/escrita) ocorrerá?
         Primeira etapa da execução (decodificação) emite a instrução (aloca uma UF se possível), já a segunda
         etapa (início da execução) lê os operandos e se estão livres, inicia a execução. A escrita ocorre no estágio

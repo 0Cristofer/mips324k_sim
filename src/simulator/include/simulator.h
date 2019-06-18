@@ -18,6 +18,7 @@
 #define NUM_REGISTERS 34
 #define MAX_INST_QUEUE_SIZE 4
 #define MAX_DECODE_QUEUE_SIZE 2
+#define MAX_ROB_QUEUE_SIZE 16
 
 /* Op code groups
     SPECIAL: ADD, AND, DIV, MFHI, MFLO, MOVN, MOVZ, MTHI, MTLO, MULT, NOP, NOR, OR, SUB, SYSCALL, XOR
@@ -61,7 +62,7 @@ struct instruction_data{
     unsigned int rd, rs, rt;
     uint16_t imm;
     unsigned int pc;
-    int is_speculate;
+    int is_speculate, is_ready;
     functional_unit_t *f;
     linked_list_t *speculative_insts;
 };
