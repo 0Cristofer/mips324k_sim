@@ -1,11 +1,10 @@
 TODO:
     - Ler o nome do program AKA ler o nome do arquivo de entrada até o ponto '.'
     - Fazer arquivo de saída final
-    - Ver liberação da FU
     - No estágio de allign cuidar de coisas como HILO
-    - Escrita no ROB ocorre no writeback, adicionar estágio para efetivação
-    - ROB iniciado, ver passagem de dados entre unidade funcional e ROB
-    - RunAdd tem código de debug
+    - Criar flags para instruções de branch e HILO
+    - Liberação de registrador de saída está acontecendo na efetivação. Mudar para o writeback. Ao liberar,
+    configura registrador para poder dar fowarding a partir do ROB
 
 Problemas:
     Falar a ideia de implementação de escrita no ROB:
@@ -25,8 +24,6 @@ Problemas:
     Como lidar com instruções que utilizam mais de um registrador de saída?
             Fazer uma flag no registrador de saída. Dependendo da flag, eu sei que tem mais de um registrador (HI e LO),
             ou que é um registrador desses (HI ou LO).
-    LUI escreve o imediato no registrador apenas na efetivação?
-        Sim.
     Como lidar com moves condicionais?
         Se for falso, escrever no registrador o dele mesmo? Ou descartar a instrução?
             Escrever o valor dele mesmo.

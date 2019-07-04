@@ -10,7 +10,7 @@
     lui $t5, 1
 
 LOOP:
-    sub $t6, $a0, $t5 #8
+    sub $t6, $a0, $t5
     blez $t6, ENDLOOP
     add $t2, $t3, $t4
     addi $t3, $t4, 0

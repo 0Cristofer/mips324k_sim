@@ -20,6 +20,8 @@
 #define MAX_DECODE_QUEUE_SIZE 2
 #define MAX_ROB_QUEUE_SIZE 16
 
+#define IS_BRANCH 64
+
 /* Op code groups
     SPECIAL: ADD, AND, DIV, MFHI, MFLO, MOVN, MOVZ, MTHI, MTLO, MULT, NOP, NOR, OR, SUB, SYSCALL, XOR
     REGIMM: BGEZ, BLTZ
@@ -50,6 +52,10 @@ enum op_codes{
     XOR = 38, XORI = 14
 };
 
+enum rob_state{
+    READY, NOT_READY
+};
+
 typedef struct functional_unit functional_unit_t;
 
 /**
@@ -62,9 +68,17 @@ struct instruction_data{
     unsigned int rd, rs, rt;
     uint16_t imm;
     unsigned int pc;
-    int is_speculate, is_ready;
+    int is_speculate, is_ready, is_branch, taken, discard;
     functional_unit_t *f;
     linked_list_t *speculative_insts;
+    rob_entry_t *entry;
+};
+
+struct rob_entry{
+    instruction_data_t* instruction;
+    enum rob_state state;
+    int out_reg;
+    int data;
 };
 
 // General simulator variables
@@ -139,6 +153,8 @@ void alignAccumulate();
  * TODO
  */
 void writeback();
+
+void effect();
 
 /**
  * Updates the program counter based on an offset

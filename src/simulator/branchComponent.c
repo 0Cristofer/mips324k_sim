@@ -49,15 +49,25 @@ int twoBitPred(uint16_t index){
 /**
  * Reads the first 10 bits of the offset and uses it as an index for the branch predictor
  */
-int branchPredictor(uint16_t offset) {
+int branchPredictor(uint16_t offset, instruction_data_t *inst) {
+    current_branch_inst = inst;
+
+    printDebugMessageInt("Predicting branch", inst->pc);
+
     if(twoBitPred(offset) > 1){
+        printDebugMessageInt("Branch taken to ", inst->pc+offset);
+        inst->taken = 1;
         return offset;
     }
+    printDebugMessage("Branch not taken");
+    inst->taken = 0;
 
     return 1;
 }
 
 void updateBht(uint16_t index, unsigned int b){
+    index = index & ((uint16_t)1023);
+
     if(b){
         if(bht[index].pred != 3) bht[index].pred = bht[index].pred + 1;
     }
@@ -94,7 +104,7 @@ int branchComponent(int current_pc) {
 
             offset =  instruction & (unsigned int)65535;
 
-            next_pc = branchPredictor((uint16_t) offset);
+            next_pc = branchPredictor((uint16_t) offset, inst_data);
 
             break;
 
@@ -142,7 +152,7 @@ int branchComponent(int current_pc) {
                     }
                     else{
                         addSpeculative(inst_data);
-                        next_pc = branchPredictor(immediate);
+                        next_pc = branchPredictor(immediate, inst_data);
                     }
 
                     break;
@@ -152,7 +162,7 @@ int branchComponent(int current_pc) {
 
                     immediate = (uint16_t)(instruction & (unsigned int)65535);
 
-                    next_pc = branchPredictor(immediate);
+                    next_pc = branchPredictor(immediate, inst_data);
 
                     break;
             }
@@ -165,10 +175,11 @@ int branchComponent(int current_pc) {
 
 void addSpeculative(instruction_data_t* inst_data){
     if(current_branch_inst){
+        printDebugMessageInt("Adding speculative inst:", inst_data->pc);
         inst_data->is_speculate = 1;
 
         if(current_branch_inst->speculative_insts){
-            insertElement(current_branch_inst->speculative_insts, inst_data);
+            current_branch_inst->speculative_insts = insertElement(current_branch_inst->speculative_insts, inst_data);
         }
         else{
             current_branch_inst->speculative_insts = malloc(sizeof(linked_list_t *));

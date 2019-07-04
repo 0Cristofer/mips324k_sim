@@ -11,6 +11,7 @@ struct queue;
 struct queue_element;
 
 typedef struct instruction_data instruction_data_t;
+typedef struct rob_entry rob_entry_t;
 typedef union queue_data queue_data_t;
 typedef struct queue queue_t;
 typedef struct queue_element queue_element_t;
@@ -20,6 +21,7 @@ typedef struct queue_element queue_element_t;
  */
 union queue_data{
      instruction_data_t *instruction;
+     rob_entry_t* entry;
 };
 
 /**
@@ -72,6 +74,8 @@ queue_data_t popLastQueue(queue_t *queue);
  * @param qh The queue to be freed
  */
 void clearQueue(queue_t *queue);
+
+void write();
 
 
 #endif //MIPS324K_SIM_QUEUE_H

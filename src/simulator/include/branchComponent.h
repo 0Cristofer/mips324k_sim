@@ -49,4 +49,6 @@ void initBranchPredictor();
  */
 void updateBht(uint16_t index, unsigned int b);
 
+extern instruction_data_t *current_branch_inst;
+
 #endif //MIPS324K_SIM_BRANCHCOMPONENT_H

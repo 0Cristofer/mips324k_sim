@@ -9,7 +9,7 @@
 #define NUM_FU_MUL 2 //2
 #define NUM_FU_DIV 2 //2
 #define NUM_FU_SUB 1 //1
-#define NUM_FU_ADD 1 //1
+#define NUM_FU_ADD 2 //1
 
 #define HI_REG 32
 #define LO_REG 33
@@ -27,7 +27,7 @@ struct functional_unit{
     int fi, fj, fk;
     int dj, dk;
     functional_unit_t *qj, *qk;
-    int rj, rk;
+    int ri, rj, rk;
     int cicles_to_end;
 };
 
@@ -58,6 +58,8 @@ void initAlu();
 int isRegFree(int r);
 
 void alocReg(int r, functional_unit_t* f);
+
+void freeReg(int r);
 
 /**
  * Verifies if there a is MUL functional unit free

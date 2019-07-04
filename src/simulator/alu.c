@@ -8,6 +8,7 @@
 #include "include/alu.h"
 #include "include/simulator.h"
 #include "include/util.h"
+#include "include/branchComponent.h"
 
 functional_unit_t *reg_status[NUM_REGISTERS]; // Register status for scoreboarding, points to a functional unit
 
@@ -99,7 +100,7 @@ int dv(int rs, int rt){
 int lui(int rs, int rt){
     printDebugMessage("Running LUI");
 
-    return rs;
+    return rt;
 }
 
 /* TODO */
@@ -335,15 +336,12 @@ functional_unit_t *hasFuAdd() {
  * @param i The index of the functional unit to be ran
  */
 void runMul(int i){
-    if(fu_mul[i].cicles_to_end == 1){
-        (*inst_fun_mul[mul_map[fu_mul[i].op]])(fu_mul[i].dj, fu_mul[i].dk);
+    fu_mul[i].cicles_to_end = fu_mul[i].cicles_to_end - 1;
 
-        // Depois de executar, escrever no ROB
+    if(!fu_mul[i].cicles_to_end){
+        fu_mul[i].ri = (*inst_fun_mul[mul_map[fu_mul[i].op]])(fu_mul[i].dj, fu_mul[i].dk);
 
-        fu_mul[i].busy = 0;
-    }
-    else{
-        fu_mul[i].cicles_to_end = fu_mul[i].cicles_to_end - 1;
+        fu_mul[i].instruction->is_ready = 1;
     }
 }
 
@@ -352,15 +350,12 @@ void runMul(int i){
  * @param i The index of the functional unit to be ran
  */
 void runDiv(int i){
-    if(fu_div[i].cicles_to_end == 1){
-        (*inst_fun_div[div_map[fu_div[i].op]])(fu_div[i].dj, fu_div[i].dk);
+    fu_div[i].cicles_to_end = fu_div[i].cicles_to_end - 1;
 
-        // Depois de executar, escrever no ROB
+    if(!fu_div[i].cicles_to_end){
+        fu_div[i].ri = (*inst_fun_div[div_map[fu_div[i].op]])(fu_div[i].dj, fu_div[i].dk);
 
-        fu_div[i].busy = 0;
-    }
-    else{
-        fu_div[i].cicles_to_end = fu_div[i].cicles_to_end - 1;
+        fu_div[i].instruction->is_ready = 1;
     }
 }
 
@@ -369,15 +364,12 @@ void runDiv(int i){
  * @param i The index of the functional unit to be ran
  */
 void runSub(int i){
-    if(fu_sub[i].cicles_to_end == 1){
-        (*inst_fun_sub[sub_map[fu_sub[i].op]])(fu_sub[i].dj, fu_sub[i].dk);
+    fu_sub[i].cicles_to_end = fu_sub[i].cicles_to_end - 1;
 
-        // Depois de executar, escrever no ROB
+    if(!fu_sub[i].cicles_to_end){
+        fu_sub[i].ri = (*inst_fun_sub[sub_map[fu_sub[i].op]])(fu_sub[i].dj, fu_sub[i].dk);
 
-        fu_sub[i].busy = 0;
-    }
-    else{
-        fu_sub[i].cicles_to_end = fu_sub[i].cicles_to_end - 1;
+        fu_sub[i].instruction->is_ready = 1;
     }
 }
 
@@ -386,20 +378,13 @@ void runSub(int i){
  * @param i The index of the functional unit to be ran
  */
 void runAdd(int i){
-    int res;
-    if(fu_add[i].cicles_to_end == 1){
-        res = (*inst_fun_add[add_map[fu_add[i].op]])(fu_add[i].dj, fu_add[i].dk);
+    fu_add[i].cicles_to_end = fu_add[i].cicles_to_end - 1;
 
-        // Depois de executar, escrever no ROB
+    if(!fu_add[i].cicles_to_end){
+        fu_add[i].ri = (*inst_fun_add[add_map[fu_add[i].op]])(fu_add[i].dj, fu_add[i].dk);
+
 
         fu_add[i].instruction->is_ready = 1;
-
-        fu_add[i].busy = 0;
-        registers[fu_add[i].fi] = res;
-        reg_status[fu_add[i].fi] = NULL;
-    }
-    else{
-        fu_add[i].cicles_to_end = fu_add[i].cicles_to_end - 1;
     }
 }
 
@@ -445,4 +430,96 @@ int runAlu(){
     }
 
     return ran;
+}
+
+void write(){
+    int i;
+    linked_list_t * speculative_inst;
+
+    for(i = 0; i < NUM_FU_MUL; i++) {
+        if(!fu_mul[i].busy) continue;
+
+        if(fu_mul[i].instruction->is_ready){
+            printDebugMessage("Writing instruction to ROB (MUL)");
+
+            fu_mul[i].busy = 0;
+
+            fu_mul[i].instruction->entry->out_reg = fu_mul[i].fi;
+            fu_mul[i].instruction->entry->data = fu_mul[i].ri;
+            fu_mul[i].instruction->entry->state = READY;
+        }
+    }
+
+    for(i = 0; i < NUM_FU_DIV; i++) {
+        if(!fu_div[i].busy) continue;
+
+        if(fu_div[i].instruction->is_ready){
+            printDebugMessage("Writing instruction to ROB (DIV)");
+
+            fu_div[i].busy = 0;
+            fu_div[i].instruction->entry->out_reg = fu_div[i].fi;
+            fu_div[i].instruction->entry->data = fu_div[i].ri;
+            fu_div[i].instruction->entry->state = READY;
+        }
+    }
+
+    for(i = 0; i < NUM_FU_SUB; i++) {
+        if(!fu_sub[i].busy) continue;
+
+        if(fu_sub[i].instruction->is_ready){
+            printDebugMessage("Writing instruction to ROB (SUB)");
+
+            fu_sub[i].busy = 0;
+            fu_sub[i].instruction->entry->out_reg = fu_sub[i].fi;
+            fu_sub[i].instruction->entry->data = fu_sub[i].ri;
+            fu_sub[i].instruction->entry->state = READY;
+        }
+    }
+
+    for(i = 0; i < NUM_FU_ADD; i++) {
+        if(!fu_add[i].busy) continue;
+
+        if(fu_add[i].instruction->is_ready){
+            printDebugMessage("Writing instruction to ROB (ADD)");
+
+            fu_add[i].busy = 0;
+
+            if(fu_add[i].instruction->is_branch) {
+                fu_add[i].instruction->entry->out_reg = IS_BRANCH;
+                speculative_inst = fu_add[i].instruction->speculative_insts;
+
+                updateBht(fu_add[i].instruction->imm, fu_add[i].ri);
+
+                while(speculative_inst != NULL){
+                    speculative_inst->data->is_speculate = 0;
+
+                    if(fu_add[i].instruction->discard)
+                        speculative_inst->data->discard = 1;
+                    else
+                        speculative_inst->data->discard = fu_add[i].ri != fu_add[i].instruction->taken;
+
+                    speculative_inst = speculative_inst->next;
+                }
+
+                if(fu_add[i].ri != fu_add[i].instruction->taken) {
+                    if (fu_add[i].ri)
+                        pc = fu_add[i].instruction->pc + fu_add[i].instruction->imm;
+                    else
+                        pc = fu_add[i].instruction->pc + 1;
+                }
+
+                if(current_branch_inst == fu_add[i].instruction)
+                    current_branch_inst = NULL;
+
+                clearList(fu_add[i].instruction->speculative_insts);
+            }
+            else{
+                fu_add[i].instruction->entry->out_reg = fu_add[i].fi;
+                fu_add[i].instruction->entry->data = fu_add[i].ri;
+            }
+
+            fu_add[i].instruction->entry->state = READY;
+
+        }
+    }
 }
