@@ -216,8 +216,6 @@ void initAlu(){
         fu_mul[i].fi = -1;
         fu_mul[i].fj = -1;
         fu_mul[i].fk = -1;
-        fu_mul[i].qj = NULL;
-        fu_mul[i].qk = NULL;
         fu_mul[i].rj = 0;
         fu_mul[i].rk = 0;
         fu_mul[i].cicles_to_end = 0;
@@ -229,8 +227,6 @@ void initAlu(){
         fu_div[i].fi = -1;
         fu_div[i].fj = -1;
         fu_div[i].fk = -1;
-        fu_div[i].qj = NULL;
-        fu_div[i].qk = NULL;
         fu_div[i].rj = 0;
         fu_div[i].rk = 0;
         fu_div[i].cicles_to_end = 0;
@@ -242,8 +238,6 @@ void initAlu(){
         fu_sub[i].fi = -1;
         fu_sub[i].fj = -1;
         fu_sub[i].fk = -1;
-        fu_sub[i].qj = NULL;
-        fu_sub[i].qk = NULL;
         fu_sub[i].rj = 0;
         fu_sub[i].rk = 0;
         fu_sub[i].cicles_to_end = 0;
@@ -255,8 +249,6 @@ void initAlu(){
         fu_add[i].fi = -1;
         fu_add[i].fj = -1;
         fu_add[i].fk = -1;
-        fu_add[i].qj = NULL;
-        fu_add[i].qk = NULL;
         fu_add[i].rj = 0;
         fu_add[i].rk = 0;
         fu_add[i].cicles_to_end = 0;

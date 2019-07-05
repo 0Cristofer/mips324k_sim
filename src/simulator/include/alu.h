@@ -26,7 +26,6 @@ struct functional_unit{
     int op;
     int fi, fj, fk;
     int dj, dk;
-    functional_unit_t *qj, *qk;
     int ri, rj, rk;
     int cicles_to_end;
 };
