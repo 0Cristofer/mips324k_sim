@@ -9,7 +9,7 @@
 #define NUM_FU_MUL 2 //2
 #define NUM_FU_DIV 2 //2
 #define NUM_FU_SUB 1 //1
-#define NUM_FU_ADD 2 //1
+#define NUM_FU_ADD 1 //1
 
 #define HI_REG 32
 #define LO_REG 33

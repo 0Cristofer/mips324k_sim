@@ -1,4 +1,4 @@
-    lui $a0, 30
+    lui $a0, 6
 
     lui $t1, 1
     beq $a0, $t0, R0

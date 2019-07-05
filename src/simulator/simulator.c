@@ -225,7 +225,6 @@ void execution(){
                                                 "Has free ADD/LOGIC/MOVE function unit (with dest), decoding");
                                         alocReg(HI_REG, f);
 
-                                        f->fi = 0;
                                         f->fi = HI_REG;
                                         f->fk = -1;
                                         f->rk = 1;
@@ -336,18 +335,11 @@ void execution(){
 
                                 if(!f->fj){
                                     f->fj = rs;
-                                    if(f->fi != -1)
-                                        f->rj = isRegFree(rs) || (rs == rd);
-                                    else
-                                        f->rj = isRegFree(rs);
+                                    f->rj = 0;
                                 }
-
                                 if(!f->fk){
                                     f->fk = rt;
-                                    if(f->fi != -1)
-                                        f->rk = isRegFree(rt) || (rt == rd);
-                                    else
-                                        f->rk = isRegFree(rt);
+                                    f->rk = 0;
                                 }
 
                                 dec_data.instruction = inst_data;
@@ -395,7 +387,7 @@ void execution(){
                                 f->fi = -1;
                                 f->fj = rs;
                                 f->fk = -1;
-                                f->rj = isRegFree(rs);
+                                f->rj = 0;
                                 f->rk = 1;
                                 f->cicles_to_end = cicles_add[add_map[op_code]];
 
@@ -452,8 +444,8 @@ void execution(){
                                 else f->fi = -1;
                                 f->fj = rs;
                                 f->fk = rt;
-                                f->rj = isRegFree(rs);
-                                f->rk = isRegFree(rt);
+                                f->rj = 0;
+                                f->rk = 0;
                                 f->cicles_to_end = cicles_mul[mul_map[op_code]];
 
                                 dec_data.instruction = inst_data;
@@ -572,14 +564,11 @@ void execution(){
 
                                 if(!f->fj){
                                     f->fj = rs;
-                                    if(f->fi != -1)
-                                        f->rk = isRegFree(rs) || (rs == r);
-                                    else
-                                        f->rk = isRegFree(rt);
+                                    f->rj = 0;
                                 }
                                 if(!f->fk){
                                     f->fk = rt;
-                                    f->rk = ;
+                                    f->rk = 0;
                                 }
 
                                 dec_data.instruction = inst_data;
