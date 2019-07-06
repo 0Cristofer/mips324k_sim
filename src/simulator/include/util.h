@@ -9,5 +9,6 @@
 void printDebugMessage(char *message);
 void printDebugMessageInt(char *message, int d);
 void printDebugError(char *stage, char *message);
+void printRegister(enum register_name reg);
 
 #endif //MIPS324K_SIM_UTIL_H

@@ -9,7 +9,34 @@
 #define NUM_FU_MUL 2 //2
 #define NUM_FU_DIV 2 //2
 #define NUM_FU_SUB 1 //1
-#define NUM_FU_ADD 1 //1
+#define NUM_FU_ADD 2 //1
+
+#define C_ADD 2
+#define C_AND 1
+#define C_MFHI 1
+#define C_MFLO 1
+#define C_MOVN 1
+#define C_MOVZ 1
+#define C_MTHI 1
+#define C_MTLO 1
+#define C_NOR 1
+#define C_OR 1
+#define C_XOR 1
+#define C_BGEZ 1
+#define C_BLTZ 1
+#define C_BEQ 1
+#define C_BEQL 1
+#define C_BGTZ 1
+#define C_BLEZ 1
+#define C_BNE 1
+#define C_LUI 1
+#define C_SUB 2
+#define C_DIV 10
+#define C_MULT 12
+#define C_MUL 10
+#define C_MADD 14
+#define C_MSUB 14
+
 
 #define HI_REG 32
 #define LO_REG 33

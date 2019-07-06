@@ -26,11 +26,11 @@ int sub_map[] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 int add_map[] = {12, 11, -1, -1, 15, 19, 18, 17, 13, -1, 5, 4, 14, 21, 22, 20, 2, 6, 3, 7, 16, -1, -1, -1, -1, -1,
                  -1, -1, -1, -1, -1, -1, 0, -1, -1, -1, 1, 9, 10, 8};
 
-int cicles_mul[] = {4, 4, 4, 4};
-int cicles_div[] = {4};
-int cicles_sub[] = {2};
-int cicles_add[] = {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3,
-                    2, 2, 2, 2, 2, 2, 2, 2, 2};
+int cicles_mul[] = {C_MULT, C_MUL, C_MADD, C_MSUB};
+int cicles_div[] = {C_DIV};
+int cicles_sub[] = {C_SUB};
+int cicles_add[] = {C_ADD, C_AND, C_MFHI, C_MFLO, C_MOVN, C_MOVZ, C_MTHI, C_MTLO, C_NOR, C_OR, C_XOR, C_BGEZ, C_BLTZ, C_ADD,
+                    C_AND, C_BEQ, C_BEQL, C_BGTZ, C_BLEZ, C_BNE, C_LUI, C_OR, C_XOR};
 
 int add(int rs, int rt){
     printDebugMessage("Running ADD");
@@ -110,32 +110,28 @@ int madd(int rs, int rt){
     return rs;
 }
 
-/* TODO */
 int mfhi(int rs, int rt){
     printDebugMessage("Running MFHI");
 
     return rs;
 }
 
-/* TODO */
 int mflo(int rs, int rt){
     printDebugMessage("Running MFLO");
 
     return rs;
 }
 
-/* TODO */
 int movn(int rs, int rt){
     printDebugMessage("Running MOVN");
 
-    return rs;
+    return rt != 0;
 }
 
-/* TODO */
 int movz(int rs, int rt){
     printDebugMessage("Running MOVZ");
 
-    return rs;
+    return rt == 0;
 }
 
 /* TODO */
@@ -145,20 +141,19 @@ int msub(int rs, int rt){
     return rs;
 }
 
-/* TODO */
 int mthi(int rs, int rt){
     printDebugMessage("Running MTHI");
 
     return rs;
 }
 
-/* TODO */
 int mtlo(int rs, int rt){
     printDebugMessage("Running MTLO");
 
     return rs;
 }
 
+/* TODO */
 int mul(int rs, int rt){
     printDebugMessage("Running MUL");
 
@@ -476,7 +471,7 @@ void write(){
 
             fu_add[i].busy = 0;
 
-            if(fu_add[i].instruction->is_branch) {
+            if(fu_add[i].instruction->write_flag == IS_BRANCH) {
                 fu_add[i].instruction->entry->out_reg = IS_BRANCH;
                 speculative_inst = fu_add[i].instruction->speculative_insts;
 
@@ -504,6 +499,12 @@ void write(){
                     current_branch_inst = NULL;
 
                 clearList(fu_add[i].instruction->speculative_insts);
+            }
+            else if (fu_add[i].instruction->write_flag == IS_MOVE){
+                fu_add[i].instruction->entry->out_reg = fu_add[i].fi;
+                if(fu_add[i].ri) fu_add[i].instruction->entry->data = fu_add[i].dj;
+                else fu_add[i].instruction->entry->data = registers[fu_add[i].fi];
+
             }
             else{
                 fu_add[i].instruction->entry->out_reg = fu_add[i].fi;

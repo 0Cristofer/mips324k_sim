@@ -1,10 +1,15 @@
 TODO:
     - Ler o nome do program AKA ler o nome do arquivo de entrada até o ponto '.'
     - Fazer arquivo de saída final
-    - No estágio de allign cuidar de coisas como HILO
-    - Criar flags para instruções de branch e HILO
-    - Liberação de registrador de saída está acontecendo na efetivação. Mudar para o writeback. Ao liberar,
+    - Instruções de multiplicação/divisão
+    - Bypass/foward
+
+Ideias:
+    Bypass/foward: Liberação de registrador de saída está acontecendo na efetivação. Mudar para o writeback. Ao liberar,
     configura registrador para poder dar fowarding a partir do ROB
+    Multiplicação/divisão: Alterar funções expecificas para retornar long. Adicionar campos na unidade funcional para HILO.
+        Ao terminar de executar, enviar para o estágio de allign, onde o long vai ser quebrado em 2 (HILO). Fazer uma fila
+        para o allign
 
 Problemas:
     Falar a ideia de implementação de escrita no ROB:

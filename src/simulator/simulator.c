@@ -19,8 +19,6 @@ queue_t instruction_queue;
 queue_t rob_queue;
 
 void startSimulation(unsigned int *insts, unsigned int num_insts, int b){
-    int i;
-
     debug = b;
     instructions = insts;
     running = 1;
@@ -32,13 +30,12 @@ void startSimulation(unsigned int *insts, unsigned int num_insts, int b){
     initAlu();
     initBranchPredictor();
 
-    for(i = 0; i < NUM_REGISTERS; i++){
-        registers[i] = 0;
-    }
+    registers[ZERO] = 0;
+    registers[T0] = 0;
 
     clock();
 
-    printDebugMessageInt("Register v0", registers[2]);
+    printRegister(T2);
 
     cleanup();
 }
@@ -96,7 +93,6 @@ void instruction(){
         data.instruction->speculative_insts = NULL;
         data.instruction->is_speculate = 0;
         data.instruction->is_ready = 0;
-        data.instruction->is_branch = 0;
         data.instruction->pc = pc;
         data.instruction->discard = 0;
 
@@ -357,6 +353,14 @@ void execution(){
                             inst_data->rs = f->fj;
                             inst_data->rt = f->fk;
 
+                            if((op_code == MOVN) || (op_code == MOVZ) || (op_code == MTHI) || (op_code == MTLO)
+                               || (op_code == MFHI) || (op_code == MFLO))
+                                inst_data->write_flag = IS_MOVE;
+                            else if((op_code == DIV) || (op_code == MULT))
+                                inst_data->write_flag = IS_MUL;
+                            else
+                                inst_data->write_flag = IS_NORMAL;
+
                             rob_data.entry = malloc(sizeof(rob_entry_t));
                             rob_data.entry->instruction = inst_data;
 
@@ -401,7 +405,8 @@ void execution(){
                             inst_data->op_code = op_code;
                             inst_data->rs = rs;
                             inst_data->imm = offset;
-                            inst_data->is_branch = 1;
+                            inst_data->write_flag = 1;
+                            inst_data->write_flag = IS_BRANCH;
 
                             rob_data.entry = malloc(sizeof(rob_entry_t));
                             rob_data.entry->instruction = inst_data;
@@ -422,7 +427,6 @@ void execution(){
                         rt = (instruction >> (unsigned int)16) & (unsigned int) 31;
                         rs = (instruction >> (unsigned int)21) & (unsigned int) 31;
                         rd = (instruction >> (unsigned int)11) & (unsigned int) 31;
-                        immediate = (uint16_t) (instruction & (unsigned int) 65535);
 
                         f = hasFuMul();
                         has_functional_unit = (f != NULL) && isRegFree(HI_REG) && isRegFree(LO_REG) && isRegFree(rs)
@@ -459,6 +463,7 @@ void execution(){
                             inst_data->rd = f->fi;
                             inst_data->rs = rs;
                             inst_data->rt = rt;
+                            inst_data->write_flag = IS_MUL;
 
                             rob_data.entry = malloc(sizeof(rob_entry_t));
                             rob_data.entry->instruction = inst_data;
@@ -522,7 +527,6 @@ void execution(){
                                     f->rk = 1;
                                     f->dj = registers[rs];
                                     f->dk = registers[rt];
-                                    inst_data->is_branch = 1;
                                 }
                                 else
                                     printDebugMessage("No free ADD/LOGIC function unit (without dest), stopping");
@@ -543,7 +547,6 @@ void execution(){
                                     f->rj = 1;
                                     f->rk = 1;
                                     f->dj = registers[rs];
-                                    inst_data->is_branch = 1;
                                 }
                                 else
                                     printDebugMessage("No free ADD/LOGIC function unit (without dest), stopping");
@@ -577,6 +580,12 @@ void execution(){
                             inst_data->rs = f->fj;
                             inst_data->rt = f->fk;
                             inst_data->imm = immediate;
+
+                            if((op_code == BEQ) || (op_code == BEQL) || (op_code == BNE) || (op_code == BGTZ)
+                               || (op_code == BLEZ))
+                                inst_data->write_flag = IS_BRANCH;
+                            else
+                                inst_data->write_flag = IS_NORMAL;
 
                             rob_data.entry = malloc(sizeof(rob_entry_t));
                             rob_data.entry->instruction = inst_data;

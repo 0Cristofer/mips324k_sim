@@ -19,7 +19,10 @@
 #define MAX_INST_QUEUE_SIZE 4
 #define MAX_ROB_QUEUE_SIZE 16
 
-#define IS_BRANCH 64
+#define IS_NORMAL 64
+#define IS_BRANCH 65
+#define IS_MOVE 66
+#define IS_MUL 67
 
 /* Op code groups
     SPECIAL: ADD, AND, DIV, MFHI, MFLO, MOVN, MOVZ, MTHI, MTLO, MULT, NOP, NOR, OR, SUB, SYSCALL, XOR
@@ -51,6 +54,11 @@ enum op_codes{
     XOR = 38, XORI = 14
 };
 
+enum register_name{
+    ZERO = 0, AT, V0, V1, A0, A1, A2, A3, T0, T1, T2, T3, T4, T5, T6, T7, S0, S1, S2, S3, S4, S5, S6, S7, T8, T9,
+    K0, K1, GP, SP, FP, RA, HI, LO
+};
+
 enum rob_state{
     READY, NOT_READY
 };
@@ -67,7 +75,7 @@ struct instruction_data{
     unsigned int rd, rs, rt;
     uint16_t imm;
     unsigned int pc;
-    int is_speculate, is_ready, is_branch, taken, discard;
+    int is_speculate, is_ready, write_flag, taken, discard;
     functional_unit_t *f;
     linked_list_t *speculative_insts;
     rob_entry_t *entry;
