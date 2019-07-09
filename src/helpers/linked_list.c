@@ -11,7 +11,7 @@
 linked_list_t *insertElement(linked_list_t *list, instruction_data_t *data){
     linked_list_t *l;
 
-    l = malloc(sizeof(linked_list_t *));
+    l = malloc(sizeof(linked_list_t));
     l->data = data;
     l->next = list;
 

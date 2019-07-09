@@ -10,7 +10,7 @@
 #include "include/util.h"
 #include "include/branchComponent.h"
 
-functional_unit_t *reg_status[NUM_REGISTERS]; // Register status for scoreboarding, points to a functional unit
+register_data_t reg_status[NUM_REGISTERS]; // Register status for scoreboarding, points to a functional unit
 
 /* Functional units */
 functional_unit_t fu_mul[NUM_FU_MUL];
@@ -41,7 +41,7 @@ int add(int rs, int rt){
 int and(int rs, int rt){
     printDebugMessage("Running AND");
 
-    return rs & rt;
+    return ((unsigned int)rs) & ((unsigned int)rt);
 }
 
 
@@ -57,6 +57,8 @@ int beql(int rs, int rt){
     return rs == rt;
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-parameter"
 int bgez(int rs, int rt){
     printDebugMessage("Running BGEZ");
 
@@ -80,6 +82,7 @@ int bltz(int rs, int rt){
 
     return rs < 0;
 }
+#pragma clang diagnostic pop
 
 int bne(int rs, int rt){
     printDebugMessage("Running BNE");
@@ -97,19 +100,24 @@ int dv(int rs, int rt){
     return rs / rt;
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-parameter"
 int lui(int rs, int rt){
     printDebugMessage("Running LUI");
 
     return rt;
 }
+#pragma clang diagnostic pop
 
 /* TODO */
 int madd(int rs, int rt){
     printDebugMessage("Running MADD");
 
-    return rs;
+    return rs+rt;
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-parameter"
 int mfhi(int rs, int rt){
     printDebugMessage("Running MFHI");
 
@@ -133,14 +141,17 @@ int movz(int rs, int rt){
 
     return rt == 0;
 }
+#pragma clang diagnostic pop
 
 /* TODO */
 int msub(int rs, int rt){
     printDebugMessage("Running MSUB");
 
-    return rs;
+    return rs+rt;
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-parameter"
 int mthi(int rs, int rt){
     printDebugMessage("Running MTHI");
 
@@ -152,6 +163,7 @@ int mtlo(int rs, int rt){
 
     return rs;
 }
+#pragma clang diagnostic pop
 
 /* TODO */
 int mul(int rs, int rt){
@@ -164,19 +176,19 @@ int mul(int rs, int rt){
 int mult(int rs, int rt){
     printDebugMessage("Running MULT");
 
-    return rs;
+    return rs+rt;
 }
 
 int nor(int rs, int rt){
     printDebugMessage("Running NOR");
 
-    return ~(rs | rt);
+    return ~(((unsigned int)rs) | ((unsigned int)rt));
 }
 
 int or(int rs, int rt){
     printDebugMessage("Running OR");
 
-    return rs | rt;
+    return ((unsigned int)rs) | ((unsigned int)rt);
 }
 
 int sub(int rs, int rt){
@@ -188,7 +200,7 @@ int sub(int rs, int rt){
 int xor(int rs, int rt){
     printDebugMessage("Running XOR");
 
-    return rs ^ rt;
+    return ((unsigned int)rs) ^ ((unsigned int)rt);
 }
 
 
@@ -202,7 +214,8 @@ void initAlu(){
     int i;
 
     for(i = 0; i < NUM_REGISTERS; i++){
-        reg_status[i] = NULL;
+        reg_status[i].status = FREE;
+        reg_status[i].entry = NULL;
     }
 
     for(i = 0; i < NUM_FU_MUL; i++){
@@ -250,16 +263,30 @@ void initAlu(){
     }
 }
 
-int isRegFree(int r){
-    return reg_status[r] == NULL;
+int isRegFree(int r, enum register_acess type){
+    if(type == READ) return (reg_status[r].status == FREE) || (reg_status[r].status == BYPASS);
+    else return reg_status[r].status == FREE;
 }
 
-void alocReg(int r, functional_unit_t* f){
-    reg_status[r] = f;
+int readReg(int r){
+    if(reg_status[r].status == FREE){
+        printDebugMessageInt("Normal register read", r);
+        return registers[r];
+    }
+    else if(reg_status[r].status == BYPASS){
+        printDebugMessageInt("Bypass register read", r);
+        return reg_status[r].entry->data;
+    }
+    else return 0;
+}
+
+void alocReg(int r) {
+    reg_status[r].status = USED;
 }
 
 void freeReg(int r){
-    reg_status[r] = NULL;
+    reg_status[r].status = FREE;
+    reg_status[r].entry = NULL;
 }
 
 functional_unit_t *hasFuMul() {
@@ -434,6 +461,13 @@ void write(){
             fu_mul[i].instruction->entry->out_reg = fu_mul[i].fi;
             fu_mul[i].instruction->entry->data = fu_mul[i].ri;
             fu_mul[i].instruction->entry->state = READY;
+
+            if(fu_mul[i].instruction->discard)
+                reg_status[fu_mul[i].fi].status = USED;
+            else
+                reg_status[fu_mul[i].fi].status = BYPASS;
+
+            reg_status[fu_mul[i].fi].entry = fu_mul[i].instruction->entry;
         }
     }
 
@@ -447,6 +481,13 @@ void write(){
             fu_div[i].instruction->entry->out_reg = fu_div[i].fi;
             fu_div[i].instruction->entry->data = fu_div[i].ri;
             fu_div[i].instruction->entry->state = READY;
+
+            if(fu_div[i].instruction->discard)
+                reg_status[fu_div[i].fi].status = USED;
+            else
+                reg_status[fu_div[i].fi].status = BYPASS;
+
+            reg_status[fu_div[i].fi].entry = fu_div[i].instruction->entry;
         }
     }
 
@@ -460,6 +501,13 @@ void write(){
             fu_sub[i].instruction->entry->out_reg = fu_sub[i].fi;
             fu_sub[i].instruction->entry->data = fu_sub[i].ri;
             fu_sub[i].instruction->entry->state = READY;
+
+            if(fu_sub[i].instruction->discard)
+                reg_status[fu_sub[i].fi].status = USED;
+            else
+                reg_status[fu_sub[i].fi].status = BYPASS;
+
+            reg_status[fu_sub[i].fi].entry = fu_sub[i].instruction->entry;
         }
     }
 
@@ -505,10 +553,24 @@ void write(){
                 if(fu_add[i].ri) fu_add[i].instruction->entry->data = fu_add[i].dj;
                 else fu_add[i].instruction->entry->data = registers[fu_add[i].fi];
 
+                if(fu_add[i].instruction->discard)
+                    reg_status[fu_add[i].fi].status = USED;
+                else
+                    reg_status[fu_add[i].fi].status = BYPASS;
+
+                reg_status[fu_add[i].fi].entry = fu_add[i].instruction->entry;
+
             }
             else{
                 fu_add[i].instruction->entry->out_reg = fu_add[i].fi;
                 fu_add[i].instruction->entry->data = fu_add[i].ri;
+
+                if(fu_add[i].instruction->discard)
+                    reg_status[fu_add[i].fi].status = USED;
+                else
+                    reg_status[fu_add[i].fi].status = BYPASS;
+
+                reg_status[fu_add[i].fi].entry = fu_add[i].instruction->entry;
             }
 
             fu_add[i].instruction->entry->state = READY;

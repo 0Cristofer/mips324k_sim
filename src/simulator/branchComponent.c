@@ -182,7 +182,7 @@ void addSpeculative(instruction_data_t* inst_data){
             current_branch_inst->speculative_insts = insertElement(current_branch_inst->speculative_insts, inst_data);
         }
         else{
-            current_branch_inst->speculative_insts = malloc(sizeof(linked_list_t *));
+            current_branch_inst->speculative_insts = malloc(sizeof(linked_list_t));
             current_branch_inst->speculative_insts->data = inst_data;
             current_branch_inst->speculative_insts->next = NULL;
         }

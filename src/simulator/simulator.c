@@ -119,6 +119,9 @@ void execution(){
 
     printDebugMessage("---Execution stage---");
 
+    // Always run the ALU, if queues are empety and nothing ran, stop running
+    running = runAlu() || (!((!instruction_queue.size) && (pc == num_instructions) && (!rob_queue.size)));
+
     if(!instruction_queue.size){
         printDebugMessage("Instruction queue is empety, skipping");
     }
@@ -150,183 +153,186 @@ void execution(){
                             case MOVN:
                             case MOVZ:
                                 f = hasFuAdd();
-                                has_functional_unit = (f != NULL) && isRegFree(rd) && isRegFree(rs) && isRegFree(rt);
+                                has_functional_unit = (f != NULL) && isRegFree(rd, WRITE) && isRegFree(rs, READ) &&
+                                        isRegFree(rt, READ);
 
                                 if (has_functional_unit) {
-                                    printDebugMessage(
-                                            "Has free ADD/LOGIC/MOVE function unit (with dest), decoding");
-                                    alocReg(rd, f);
+                                    printDebugMessageInt(
+                                            "Has free ADD/LOGIC/MOVE function unit (with dest), decoding", inst_data->pc);
 
                                     f->fi = rd;
                                     f->fj = rs;
                                     f->fk = rt;
                                     f->rj = 1;
                                     f->rk = 1;
-                                    f->dj = registers[rs];
-                                    f->dk = registers[rt];
+                                    f->dj = readReg(rs);
+                                    f->dk = readReg(rt);
                                     f->cicles_to_end = cicles_add[add_map[op_code]];
+
+                                    alocReg(rd);
                                 }
                                 else
-                                    printDebugMessage("No free ADD/LOGIC/MOVE function unit (with dest), stopping");
+                                    printDebugMessageInt("No free ADD/LOGIC/MOVE function unit (with dest), stopping", inst_data->pc);
 
                                 break;
 
                             case MFHI:
                                 f = hasFuAdd();
-                                has_functional_unit = (f != NULL) && isRegFree(rd) && isRegFree(HI_REG);
+                                has_functional_unit = (f != NULL) && isRegFree(rd, WRITE) && isRegFree(HI_REG, READ);
 
                                 if (has_functional_unit) {
-                                    printDebugMessage(
-                                            "Has free ADD/LOGIC/MOVE function unit (with dest), decoding");
-                                    alocReg(rd, f);
-
+                                    printDebugMessageInt(
+                                            "Has free ADD/LOGIC/MOVE function unit (with dest), decoding", inst_data->pc);
                                     f->fi = rd;
                                     f->fj = HI_REG;
                                     f->fk = -1;
                                     f->rj = 1;
                                     f->rk = 1;
-                                    f->dj = registers[HI_REG];
+                                    f->dj = readReg(HI_REG);
                                     f->cicles_to_end = cicles_add[add_map[op_code]];
+
+                                    alocReg(rd);
                                 }
                                 else
-                                    printDebugMessage("No free ADD/LOGIC/MOVE function unit (with dest), stopping");
+                                    printDebugMessageInt("No free ADD/LOGIC/MOVE function unit (with dest), stopping", inst_data->pc);
 
                                 break;
 
                             case MFLO:
                                 f = hasFuAdd();
-                                has_functional_unit = (f != NULL) && isRegFree(rd) && isRegFree(LO_REG);
+                                has_functional_unit = (f != NULL) && isRegFree(rd, WRITE) && isRegFree(LO_REG, READ);
 
                                 if (has_functional_unit) {
-                                    printDebugMessage(
-                                            "Has free ADD/LOGIC/MOVE function unit (with dest), decoding");
-                                    alocReg(rd, f);
-
+                                    printDebugMessageInt(
+                                            "Has free ADD/LOGIC/MOVE function unit (with dest), decoding", inst_data->pc);
                                     f->fi = rd;
                                     f->fj = LO_REG;
                                     f->fk = -1;
                                     f->rj = 1;
                                     f->rk = 1;
-                                    f->dj = registers[LO_REG];
+                                    f->dj = readReg(LO_REG);
                                     f->cicles_to_end = cicles_add[add_map[op_code]];
+
+                                    alocReg(rd);
                                 }
                                 else
-                                    printDebugMessage("No free ADD/LOGIC/MOVE function unit (with dest), stopping");
+                                    printDebugMessageInt("No free ADD/LOGIC/MOVE function unit (with dest), stopping", inst_data->pc);
 
                                 break;
 
                             case MTHI:
                                 f = hasFuAdd();
-                                has_functional_unit = (f != NULL) && isRegFree(HI_REG) && isRegFree(rs);
+                                has_functional_unit = (f != NULL) && isRegFree(HI_REG, WRITE) && isRegFree(rs, READ);
 
                                 if (has_functional_unit) {
-                                    printDebugMessage(
-                                            "Has free ADD/LOGIC/MOVE function unit (with dest), decoding");
-                                    alocReg(HI_REG, f);
-
+                                    printDebugMessageInt(
+                                            "Has free ADD/LOGIC/MOVE function unit (with dest), decoding", inst_data->pc);
                                     f->fi = HI_REG;
                                     f->fj = rs;
                                     f->fk = -1;
                                     f->rj = 1;
                                     f->rk = 1;
-                                    f->dj = registers[rs];
+                                    f->dj = readReg(rs);
                                     f->cicles_to_end = cicles_add[add_map[op_code]];
+
+                                    alocReg(HI_REG);
                                 }
                                 else
-                                    printDebugMessage("No free ADD/LOGIC/MOVE function unit (with dest), stopping");
+                                    printDebugMessageInt("No free ADD/LOGIC/MOVE function unit (with dest), stopping", inst_data->pc);
 
                                 break;
 
                             case MTLO:
                                 f = hasFuAdd();
-                                has_functional_unit = (f != NULL) && isRegFree(LO_REG) && isRegFree(rs);
+                                has_functional_unit = (f != NULL) && isRegFree(LO_REG, WRITE) && isRegFree(rs, READ);
 
                                 if (has_functional_unit) {
-                                    printDebugMessage(
-                                            "Has free ADD/LOGIC/MOVE function unit (with dest), decoding");
-                                    alocReg(LO_REG, f);
-
+                                    printDebugMessageInt(
+                                            "Has free ADD/LOGIC/MOVE function unit (with dest), decoding", inst_data->pc);
                                     f->fi = LO_REG;
                                     f->fj = rs;
                                     f->fk = -1;
                                     f->rj = 1;
                                     f->rk = 1;
-                                    f->dj = registers[rs];
+                                    f->dj = readReg(rs);
                                     f->cicles_to_end = cicles_add[add_map[op_code]];
+
+                                    alocReg(LO_REG);
                                 }
                                 else
-                                    printDebugMessage("No free ADD/LOGIC/MOVE function unit (with dest), stopping");
+                                    printDebugMessageInt("No free ADD/LOGIC/MOVE function unit (with dest), stopping", inst_data->pc);
 
                                 break;
 
                             case SUB:
                                 f = hasFuSub();
-                                has_functional_unit = (f != NULL) && isRegFree(rd) && isRegFree(rs) && isRegFree(rt);
+                                has_functional_unit = (f != NULL) && isRegFree(rd, WRITE) && isRegFree(rs, READ) &&
+                                        isRegFree(rt, READ);
 
                                 if (has_functional_unit) {
-                                    printDebugMessage(
-                                            "Has free SUB function unit (with dest), decoding");
-                                    alocReg(rd, f);
-
+                                    printDebugMessageInt(
+                                            "Has free SUB function unit (with dest), decoding", inst_data->pc);
                                     f->fi = rd;
                                     f->fj = rs;
                                     f->fk = rt;
                                     f->rj = 1;
                                     f->rk = 1;
-                                    f->dj = registers[rs];
-                                    f->dk = registers[rt];
+                                    f->dj = readReg(rs);
+                                    f->dk = readReg(rt);
                                     f->cicles_to_end = cicles_sub[sub_map[op_code]];
+
+                                    alocReg(rd);
                                 }
                                 else
-                                    printDebugMessage("No free SUB function unit (with dest), stopping");
+                                    printDebugMessageInt("No free SUB function unit (with dest), stopping", inst_data->pc);
 
                                 break;
 
                             case MULT:
                                 f = hasFuMul();
-                                has_functional_unit = (f != NULL) && isRegFree(HI_REG) && isRegFree(LO_REG)
-                                                                  && isRegFree(rs) && isRegFree(rt);
+                                has_functional_unit = (f != NULL) && isRegFree(HI_REG, WRITE) && isRegFree(LO_REG, WRITE)
+                                                                  && isRegFree(rs, READ) && isRegFree(rt, READ);
 
                                 if (has_functional_unit) {
-                                    printDebugMessage("Has free MUL function unit (with dest), decoding");
-                                    alocReg(HI_REG, f);
-                                    alocReg(LO_REG, f);
-
+                                    printDebugMessageInt("Has free MUL function unit (with dest), decoding", inst_data->pc);
                                     f->fi = -1;
                                     f->fj = rs;
                                     f->fk = rt;
                                     f->rj = 1;
                                     f->rk = 1;
-                                    f->dj = registers[rs];
-                                    f->dk = registers[rt];
+                                    f->dj = readReg(rs);
+                                    f->dk = readReg(rt);
                                     f->cicles_to_end = cicles_mul[mul_map[op_code]];
+
+                                    alocReg(HI_REG);
+                                    alocReg(LO_REG);
                                 }
                                 else
-                                    printDebugMessage("No free MUL function unit (with dest), stopping");
+                                    printDebugMessageInt("No free MUL function unit (with dest), stopping", inst_data->pc);
 
                                 break;
 
                             case DIV:
                                 f = hasFuDiv();
-                                has_functional_unit = (f != NULL) && isRegFree(HI_REG) && isRegFree(LO_REG)
-                                                                  && isRegFree(rs) && isRegFree(rt);
+                                has_functional_unit = (f != NULL) && isRegFree(HI_REG, WRITE) && isRegFree(LO_REG, WRITE)
+                                                                  && isRegFree(rs, READ) && isRegFree(rt, READ);
 
                                 if (has_functional_unit) {
-                                    printDebugMessage("Has free DIV function unit (with dest), decoding");
-                                    alocReg(HI_REG, f);
-                                    alocReg(LO_REG, f);
-
+                                    printDebugMessageInt("Has free DIV function unit (with dest), decoding", inst_data->pc);
                                     f->fi = -1;
                                     f->fj = rs;
                                     f->fk = rt;
                                     f->rj = 1;
                                     f->rk = 1;
-                                    f->dj = registers[rs];
-                                    f->dk = registers[rt];
+                                    f->dj = readReg(rs);
+                                    f->dk = readReg(rt);
                                     f->cicles_to_end = cicles_div[div_map[op_code]];
+
+                                    alocReg(HI_REG);
+                                    alocReg(LO_REG);
                                 }
                                 else
-                                    printDebugMessage("No free DIV function unit (with dest), stopping");
+                                    printDebugMessageInt("No free DIV function unit (with dest), stopping", inst_data->pc);
 
                                 break;
 
@@ -378,10 +384,10 @@ void execution(){
                         rs = (instruction >> (unsigned int)21) & (unsigned int) 31;
 
                         f = hasFuAdd();
-                        has_functional_unit = (f != NULL) && isRegFree(rs);
+                        has_functional_unit = (f != NULL) && isRegFree(rs, READ);
 
                         if (has_functional_unit) {
-                            printDebugMessage("Has free ADD/LOGIC/MOVE function unit (without dest), decoding");
+                            printDebugMessageInt("Has free ADD/LOGIC/MOVE function unit (without dest), decoding", inst_data->pc);
                             inst_data->f = f;
 
                             instruction = popQueue(&instruction_queue).instruction->instruction;
@@ -397,7 +403,7 @@ void execution(){
                             f->fk = -1;
                             f->rj = 1;
                             f->rk = 1;
-                            f->dj = registers[rs];
+                            f->dj = readReg(rs);
                             f->cicles_to_end = cicles_add[add_map[op_code]];
 
                             inst_data->instruction = instruction;
@@ -417,7 +423,7 @@ void execution(){
                             pushQueue(&rob_queue, rob_data);
                         }
                         else
-                            printDebugMessage("No free ADD/LOGIC/MOVE function unit (without dest), stopping");
+                            printDebugMessageInt("No free ADD/LOGIC/MOVE function unit (without dest), stopping", inst_data->pc);
 
                         break;
 
@@ -429,17 +435,13 @@ void execution(){
                         rd = (instruction >> (unsigned int)11) & (unsigned int) 31;
 
                         f = hasFuMul();
-                        has_functional_unit = (f != NULL) && isRegFree(HI_REG) && isRegFree(LO_REG) && isRegFree(rs)
-                                                                                                       && isRegFree(rt);
+                        has_functional_unit = (f != NULL) && isRegFree(HI_REG, WRITE) && isRegFree(LO_REG, WRITE) &&
+                                isRegFree(rs, READ) && isRegFree(rt, READ);
 
-                        if(op_code == MUL) has_functional_unit = has_functional_unit && isRegFree(rd);
+                        if(op_code == MUL) has_functional_unit = has_functional_unit && isRegFree(rd, WRITE);
 
                         if (has_functional_unit) {
-                            printDebugMessage("Has free MUL function unit (with dest), decoding");
-                            alocReg(HI_REG, f);
-                            alocReg(LO_REG, f);
-                            if(op_code == MUL) alocReg(rd, f);
-
+                            printDebugMessageInt("Has free MUL function unit (with dest), decoding", inst_data->pc);
                             inst_data->f = f;
 
                             instruction = popQueue(&instruction_queue).instruction->instruction;
@@ -453,9 +455,13 @@ void execution(){
                             f->fk = rt;
                             f->rj = 1;
                             f->rk = 1;
-                            f->dj = registers[rs];
-                            f->dk = registers[rt];
+                            f->dj = readReg(rs);
+                            f->dk = readReg(rt);
                             f->cicles_to_end = cicles_mul[mul_map[op_code]];
+
+                            alocReg(HI_REG);
+                            alocReg(LO_REG);
+                            if(op_code == MUL) alocReg(rd);
 
                             inst_data->instruction = instruction;
                             inst_data->op_type = op_type;
@@ -474,7 +480,7 @@ void execution(){
                             pushQueue(&rob_queue, rob_data);
                         }
                         else
-                            printDebugMessage("No free MUL function unit (with dest), decoding");
+                            printDebugMessageInt("No free MUL function unit (with dest), decoding", inst_data->pc);
 
                         break;
 
@@ -492,22 +498,22 @@ void execution(){
                             case XORI:
                             case LUI:
                                 f = hasFuAdd();
-                                has_functional_unit = (f != NULL) && isRegFree(rt) && isRegFree(rs);
+                                has_functional_unit = (f != NULL) && isRegFree(rt, WRITE) && isRegFree(rs, READ);
                                 if (has_functional_unit) {
-                                    printDebugMessage(
-                                            "Has free ADD/LOGIC function unit (with dest), decoding");
-                                    alocReg(rt, f);
-
+                                    printDebugMessageInt(
+                                            "Has free ADD/LOGIC function unit (with dest), decoding", inst_data->pc);
                                     f->fi = rt;
                                     f->fj = rs;
                                     f->fk = -1;
                                     f->rj = 1;
                                     f->rk = 1;
-                                    f->dj = registers[rs];
+                                    f->dj = readReg(rs);
                                     f->dk = immediate;
+
+                                    alocReg(rt);
                                 }
                                 else
-                                    printDebugMessage("No free ADD/LOGIC function unit (with dest), stopping");
+                                    printDebugMessageInt("No free ADD/LOGIC function unit (with dest), stopping", inst_data->pc);
 
                                 break;
 
@@ -515,41 +521,41 @@ void execution(){
                             case BEQL:
                             case BNE:
                                 f = hasFuAdd();
-                                has_functional_unit = (f != NULL) && isRegFree(rs) && isRegFree(rt);
+                                has_functional_unit = (f != NULL) && isRegFree(rs, READ) && isRegFree(rt, READ);
                                 if (has_functional_unit) {
-                                    printDebugMessage(
-                                            "Has free ADD/LOGIC function unit (without dest), decoding");
+                                    printDebugMessageInt(
+                                            "Has free ADD/LOGIC function unit (without dest), decoding", inst_data->pc);
 
                                     f->fi = -1;
                                     f->fj = rs;
                                     f->fk = rt;
                                     f->rj = 1;
                                     f->rk = 1;
-                                    f->dj = registers[rs];
-                                    f->dk = registers[rt];
+                                    f->dj = readReg(rs);
+                                    f->dk = readReg(rt);
                                 }
                                 else
-                                    printDebugMessage("No free ADD/LOGIC function unit (without dest), stopping");
+                                    printDebugMessageInt("No free ADD/LOGIC function unit (without dest), stopping", inst_data->pc);
 
                                 break;
 
                             case BGTZ:
                             case BLEZ:
                                 f = hasFuAdd();
-                                has_functional_unit = (f != NULL) && isRegFree(rs);
+                                has_functional_unit = (f != NULL) && isRegFree(rs, READ);
                                 if (has_functional_unit) {
-                                    printDebugMessage(
-                                            "Has free ADD/LOGIC function unit (without dest), decoding");
+                                    printDebugMessageInt(
+                                            "Has free ADD/LOGIC function unit (without dest), decoding", inst_data->pc);
 
                                     f->fi = -1;
                                     f->fj = rs;
                                     f->fk = -1;
                                     f->rj = 1;
                                     f->rk = 1;
-                                    f->dj = registers[rs];
+                                    f->dj = readReg(rs);
                                 }
                                 else
-                                    printDebugMessage("No free ADD/LOGIC function unit (without dest), stopping");
+                                    printDebugMessageInt("No free ADD/LOGIC function unit (without dest), stopping", inst_data->pc);
 
                                 break;
 
@@ -601,9 +607,6 @@ void execution(){
             }
         }
     }
-
-    // Always run the ALU, if queues are empety and nothing ran, stop running
-    running = runAlu() || (!((!instruction_queue.size) && (pc == num_instructions) && (!rob_queue.size)));
 }
 
 void memory(){

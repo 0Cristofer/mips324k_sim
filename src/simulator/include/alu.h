@@ -43,6 +43,8 @@
 
 typedef struct functional_unit functional_unit_t;
 typedef struct instruction_data instruction_data_t;
+typedef struct rob_entry rob_entry_t;
+typedef struct register_data register_data_t;
 
 /**
  * Scoreboarding funciontal unit structure
@@ -55,6 +57,14 @@ struct functional_unit{
     int dj, dk;
     int ri, rj, rk;
     int cicles_to_end;
+};
+
+enum register_status{FREE, USED, BYPASS};
+enum register_acess{READ, WRITE};
+
+struct register_data{
+    enum register_status status;
+    rob_entry_t *entry;
 };
 
 /*
@@ -81,9 +91,11 @@ void initAlu();
  * @param r The register to be verified
  * @return 1 if the register is free, else 0
  */
-int isRegFree(int r);
+int isRegFree(int r, enum register_acess type);
 
-void alocReg(int r, functional_unit_t* f);
+int readReg(int r);
+
+void alocReg(int r);
 
 void freeReg(int r);
 

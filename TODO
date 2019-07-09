@@ -2,16 +2,15 @@ TODO:
     - Ler o nome do program AKA ler o nome do arquivo de entrada até o ponto '.'
     - Fazer arquivo de saída final
     - Instruções de multiplicação/divisão
-    - Bypass/foward
 
 Ideias:
-    Bypass/foward: Liberação de registrador de saída está acontecendo na efetivação. Mudar para o writeback. Ao liberar,
-    configura registrador para poder dar fowarding a partir do ROB
     Multiplicação/divisão: Alterar funções expecificas para retornar long. Adicionar campos na unidade funcional para HILO.
         Ao terminar de executar, enviar para o estágio de allign, onde o long vai ser quebrado em 2 (HILO). Fazer uma fila
         para o allign
 
 Problemas:
+    Executar a instrução no mesmo ciclo que emite ou só no próximo?
+
     Falar a ideia de implementação de escrita no ROB:
         Armazenar o resultado e o estado da entrada (ready, especulativo, etc)
         Quando a instrução termina de executar, deixa busy como 1 e os ciclos como 0, ou utilizar 2 "readys", um para o ROB
@@ -34,8 +33,6 @@ Problemas:
             Escrever o valor dele mesmo.
     Como implementar o fowarding/bypass?
         Ainda não sei rs.
-
-
     Em que estágio cada etapa (emissão/leitura/execução/escrita) ocorrerá?
         Primeira etapa da execução (decodificação) emite a instrução (aloca uma UF se possível), já a segunda
         etapa (início da execução) lê os operandos e se estão livres, inicia a execução. A escrita ocorre no estágio
