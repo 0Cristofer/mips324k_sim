@@ -17,6 +17,7 @@ int has_error = 0;
 unsigned int pc;
 queue_t instruction_queue;
 queue_t rob_queue;
+queue_t allign_queue;
 
 void startSimulation(unsigned int *insts, unsigned int num_insts, int b){
     debug = b;
@@ -27,6 +28,7 @@ void startSimulation(unsigned int *insts, unsigned int num_insts, int b){
 
     initQueue(&instruction_queue);
     initQueue(&rob_queue);
+    initQueue(&allign_queue);
     initAlu();
     initBranchPredictor();
 
@@ -35,7 +37,7 @@ void startSimulation(unsigned int *insts, unsigned int num_insts, int b){
 
     clock();
 
-    printRegister(T2);
+    printRegister(V0);
 
     cleanup();
 }
@@ -110,7 +112,7 @@ void execution(){
     queue_data_t rob_data;
 
     unsigned int instruction, op_type, op_code, rd = 0, rt = 0, rs = 0, offset = 0;
-    int has_functional_unit = 1;
+    int issued = 0, has_functional_unit = 1;
     uint16_t immediate = 0;
     instruction_data_t *inst_data;
     functional_unit_t *f = NULL;
@@ -126,7 +128,7 @@ void execution(){
         printDebugMessage("Instruction queue is empety, skipping");
     }
     else {
-        while (has_functional_unit && (rob_queue.size < MAX_ROB_QUEUE_SIZE)){
+        while (has_functional_unit && (rob_queue.size < MAX_ROB_QUEUE_SIZE) && (issued < MAX_ISSUED_INST)){
             if (!instruction_queue.size) {
                 printDebugMessage("Out of instructions. Stopping decode");
                 break;
@@ -347,6 +349,7 @@ void execution(){
                         if (has_functional_unit) {
                             inst_data->f = f;
                             instruction = popQueue(&instruction_queue).instruction->instruction;
+                            issued = issued + 1;
 
                             f->busy = 1;
                             f->instruction = inst_data;
@@ -359,11 +362,10 @@ void execution(){
                             inst_data->rs = f->fj;
                             inst_data->rt = f->fk;
 
-                            if((op_code == MOVN) || (op_code == MOVZ) || (op_code == MTHI) || (op_code == MTLO)
-                               || (op_code == MFHI) || (op_code == MFLO))
+                            if((op_code == MOVN) || (op_code == MOVZ))
                                 inst_data->write_flag = IS_MOVE;
                             else if((op_code == DIV) || (op_code == MULT))
-                                inst_data->write_flag = IS_MUL;
+                                inst_data->write_flag = IS_HILO;
                             else
                                 inst_data->write_flag = IS_NORMAL;
 
@@ -391,6 +393,7 @@ void execution(){
                             inst_data->f = f;
 
                             instruction = popQueue(&instruction_queue).instruction->instruction;
+                            issued = issued + 1;
 
                             offset = (uint16_t) instruction & (unsigned int) 65535;
 
@@ -445,6 +448,7 @@ void execution(){
                             inst_data->f = f;
 
                             instruction = popQueue(&instruction_queue).instruction->instruction;
+                            issued = issued + 1;
 
                             f->busy = 1;
                             f->instruction = inst_data;
@@ -455,6 +459,10 @@ void execution(){
                             f->fk = rt;
                             f->rj = 1;
                             f->rk = 1;
+                            if(op_code != MUL){
+                                f->hi = readReg(HI_REG);
+                                f->lo = readReg(LO_REG);
+                            }
                             f->dj = readReg(rs);
                             f->dk = readReg(rt);
                             f->cicles_to_end = cicles_mul[mul_map[op_code]];
@@ -469,7 +477,10 @@ void execution(){
                             inst_data->rd = f->fi;
                             inst_data->rs = rs;
                             inst_data->rt = rt;
-                            inst_data->write_flag = IS_MUL;
+                            if(op_code != MUL)
+                                inst_data->write_flag = IS_HILO;
+                            else
+                                inst_data->write_flag = IS_MUL;
 
                             rob_data.entry = malloc(sizeof(rob_entry_t));
                             rob_data.entry->instruction = inst_data;
@@ -574,6 +585,7 @@ void execution(){
                             f->cicles_to_end = cicles_add[add_map[op_code]];
 
                             instruction = popQueue(&instruction_queue).instruction->instruction;
+                            issued = issued + 1;
 
                             f->busy = 1;
                             f->instruction = inst_data;
@@ -615,8 +627,44 @@ void memory(){
 }
 
 void alignAccumulate(){
+    queue_data_t data;
+    long hilo;
+
     if(has_error) return;
     printDebugMessage("---Allign/Accumulate Stage---");
+
+    while(allign_queue.size){
+        data = popQueue(&allign_queue);
+
+        switch (data.f->op){
+            case MULT:
+            case DIV:
+                printDebugMessage("Alligning MULT/DIV");
+                data.f->hi = data.f->ri >> 32;
+                data.f->lo = (data.f->ri << 32) >> 32;
+                break;
+            case MUL:
+                printDebugMessage("Alligning MUL");
+                data.f->ri = (data.f->ri << 32) >> 32;
+                break;
+            case MADD:
+                printDebugMessage("Alligning MADD");
+                hilo = (((long)data.f->hi) << 32) | data.f->lo;
+                data.f->ri = hilo + data.f->ri;
+                data.f->hi = data.f->ri >> 32;
+                data.f->lo = (data.f->ri << 32) >> 32;
+                break;
+            case MSUB:
+                printDebugMessage("Alligning MSUB");
+                hilo = (((long)data.f->hi) << 32) | data.f->lo;
+                data.f->ri = hilo - data.f->ri;
+                data.f->hi = data.f->ri >> 32;
+                data.f->lo = (data.f->ri << 32) >> 32;
+                break;
+        }
+
+        data.f->instruction->is_ready = 1;
+    }
 }
 
 void writeback(){
@@ -627,12 +675,13 @@ void writeback(){
 }
 
 void effect(){
+    int effected = 0;
     queue_data_t data;
 
     if(has_error) return;
     printDebugMessage("---Effect Stage---");
 
-    while(rob_queue.size){
+    while(rob_queue.size && (effected < MAX_EFFECT_INST)){
         data = rob_queue.head->data;
 
         if(data.entry->state == READY){
@@ -640,16 +689,34 @@ void effect(){
                 data = popQueue(&rob_queue);
 
                 if(!data.entry->instruction->discard) {
-                    if(data.entry->out_reg != IS_BRANCH)  // Mudara para um switch case com as outras flags
-                        registers[data.entry->out_reg] = data.entry->data;
+                    switch (data.entry->out_reg){
+                        case IS_BRANCH:
+                            break;
+                        case IS_HILO:
+                            registers[HI_REG] = data.entry->hi;
+                            registers[LO_REG] = data.entry->lo;
+                            break;
+                        default:
+                            registers[data.entry->out_reg] = data.entry->data;
+                            break;
+                    }
 
                     printDebugMessageInt("Commited instruction", data.entry->instruction->pc);
                 }
                 else
                     printDebugMessageInt("Discarded instruction", data.entry->instruction->pc);
 
-                if(data.entry->out_reg != IS_BRANCH) // Mudara para um switch case com as outras flags
-                    freeReg(data.entry->out_reg);
+                switch (data.entry->out_reg){
+                    case IS_BRANCH:
+                        break;
+                    case IS_HILO:
+                        freeReg(HI_REG);
+                        freeReg(LO_REG);
+                        break;
+                    default:
+                        freeReg(data.entry->out_reg);
+                        break;
+                }
 
                 free(data.entry->instruction);
                 free(data.entry);
@@ -658,6 +725,8 @@ void effect(){
                 printDebugMessageInt("Instruction is speculative", data.entry->instruction->pc);
                 break;
             }
+
+            effected = effected + 1;
         }
         else {
             printDebugMessageInt("Instruction is not ready", data.entry->instruction->pc);
@@ -672,6 +741,8 @@ void updatePc(int next_pc){
 
 void cleanup(){
     clearQueue(&instruction_queue);
+    clearQueue(&rob_queue);
+    clearQueue(&allign_queue);
 }
 
 void error(){

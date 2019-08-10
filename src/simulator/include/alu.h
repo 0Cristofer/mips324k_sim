@@ -9,7 +9,7 @@
 #define NUM_FU_MUL 2 //2
 #define NUM_FU_DIV 2 //2
 #define NUM_FU_SUB 1 //1
-#define NUM_FU_ADD 2 //1
+#define NUM_FU_ADD 1 //1
 
 #define C_ADD 2
 #define C_AND 1
@@ -54,13 +54,14 @@ struct functional_unit{
     int busy;
     int op;
     int fi, fj, fk;
-    int dj, dk;
-    int ri, rj, rk;
+    int dj, dk, hi, lo;
+    long ri;
+    int rj, rk;
     int cicles_to_end;
 };
 
 enum register_status{FREE, USED, BYPASS};
-enum register_acess{READ, WRITE};
+enum register_access{READ, WRITE};
 
 struct register_data{
     enum register_status status;
@@ -91,7 +92,7 @@ void initAlu();
  * @param r The register to be verified
  * @return 1 if the register is free, else 0
  */
-int isRegFree(int r, enum register_acess type);
+int isRegFree(int r, enum register_access type);
 
 int readReg(int r);
 

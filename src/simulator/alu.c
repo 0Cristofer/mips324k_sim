@@ -90,14 +90,10 @@ int bne(int rs, int rt){
     return rs != rt;
 }
 
-/* TODO */
-int dv(int rs, int rt){
+long dv(long rs, long rt){
     printDebugMessage("Running DIV");
 
-    registers[LO_REG] = rs / rt;
-    registers[HI_REG] = rs % rt;
-
-    return rs / rt;
+    return ((rs % rt) << 32) | (rs / rt);
 }
 
 #pragma clang diagnostic push
@@ -109,11 +105,10 @@ int lui(int rs, int rt){
 }
 #pragma clang diagnostic pop
 
-/* TODO */
-int madd(int rs, int rt){
+long madd(long rs, long rt){
     printDebugMessage("Running MADD");
 
-    return rs+rt;
+    return rs * rt;
 }
 
 #pragma clang diagnostic push
@@ -143,11 +138,10 @@ int movz(int rs, int rt){
 }
 #pragma clang diagnostic pop
 
-/* TODO */
-int msub(int rs, int rt){
+long msub(long rs, long rt){
     printDebugMessage("Running MSUB");
 
-    return rs+rt;
+    return rs * rt;
 }
 
 #pragma clang diagnostic push
@@ -165,18 +159,16 @@ int mtlo(int rs, int rt){
 }
 #pragma clang diagnostic pop
 
-/* TODO */
-int mul(int rs, int rt){
+long mul(long rs, long rt){
     printDebugMessage("Running MUL");
 
     return rs * rt;
 }
 
-/* TODO */
-int mult(int rs, int rt){
+long mult(long rs, long rt){
     printDebugMessage("Running MULT");
 
-    return rs+rt;
+    return rs * rt;
 }
 
 int nor(int rs, int rt){
@@ -204,8 +196,8 @@ int xor(int rs, int rt){
 }
 
 
-int (*inst_fun_mul[])(int, int) = {mult, mul, madd, msub};
-int (*inst_fun_div[])(int, int) = {dv};
+long (*inst_fun_mul[])(long, long) = {mult, mul, madd, msub};
+long (*inst_fun_div[])(long, long) = {dv};
 int (*inst_fun_sub[])(int, int) = {sub};
 int (*inst_fun_add[])(int, int) = {add, and, mfhi, mflo, movn, movz, mthi, mtlo, nor, or, xor, bgez, bltz, add,
                             and, beq, beql, bgtz, blez, bne, lui, or, xor};
@@ -263,7 +255,7 @@ void initAlu(){
     }
 }
 
-int isRegFree(int r, enum register_acess type){
+int isRegFree(int r, enum register_access type){
     if(type == READ) return (reg_status[r].status == FREE) || (reg_status[r].status == BYPASS);
     else return reg_status[r].status == FREE;
 }
@@ -275,6 +267,14 @@ int readReg(int r){
     }
     else if(reg_status[r].status == BYPASS){
         printDebugMessageInt("Bypass register read", r);
+
+        if(reg_status[r].entry->instruction->write_flag == IS_HILO) {
+            if (r == HI_REG)
+                return reg_status[r].entry->hi;
+            else
+                return reg_status[r].entry->lo;
+        }
+
         return reg_status[r].entry->data;
     }
     else return 0;
@@ -350,12 +350,15 @@ functional_unit_t *hasFuAdd() {
  * @param i The index of the functional unit to be ran
  */
 void runMul(int i){
+    queue_data_t allign_data;
     fu_mul[i].cicles_to_end = fu_mul[i].cicles_to_end - 1;
 
     if(!fu_mul[i].cicles_to_end){
         fu_mul[i].ri = (*inst_fun_mul[mul_map[fu_mul[i].op]])(fu_mul[i].dj, fu_mul[i].dk);
 
-        fu_mul[i].instruction->is_ready = 1;
+        allign_data.f = fu_mul+i;
+
+        pushQueue(&allign_queue, allign_data);
     }
 }
 
@@ -364,12 +367,15 @@ void runMul(int i){
  * @param i The index of the functional unit to be ran
  */
 void runDiv(int i){
+    queue_data_t allign_data;
     fu_div[i].cicles_to_end = fu_div[i].cicles_to_end - 1;
 
     if(!fu_div[i].cicles_to_end){
         fu_div[i].ri = (*inst_fun_div[div_map[fu_div[i].op]])(fu_div[i].dj, fu_div[i].dk);
 
-        fu_div[i].instruction->is_ready = 1;
+        allign_data.f = fu_div+i;
+
+        pushQueue(&allign_queue, allign_data);
     }
 }
 
@@ -458,16 +464,40 @@ void write(){
 
             fu_mul[i].busy = 0;
 
-            fu_mul[i].instruction->entry->out_reg = fu_mul[i].fi;
-            fu_mul[i].instruction->entry->data = fu_mul[i].ri;
+            if (fu_mul[i].instruction->write_flag == IS_HILO) {
+                fu_mul[i].instruction->entry->out_reg = IS_HILO;
+
+                fu_mul[i].instruction->entry->hi = fu_mul[i].hi;
+                fu_mul[i].instruction->entry->lo = fu_mul[i].lo;
+
+                if (fu_mul[i].instruction->discard) {
+                    reg_status[HI_REG].status = USED;
+                    reg_status[LO_REG].status = USED;
+                }
+                else {
+                    reg_status[HI_REG].status = BYPASS;
+                    reg_status[LO_REG].status = BYPASS;
+
+                    reg_status[HI_REG].entry = fu_mul[i].instruction->entry;
+                    reg_status[LO_REG].entry = fu_mul[i].instruction->entry;
+                }
+            }
+            else {
+                fu_mul[i].instruction->entry->out_reg = fu_mul[i].fi;
+                fu_mul[i].instruction->entry->data = fu_mul[i].ri;
+
+                freeReg(HI_REG);
+                freeReg(LO_REG);
+
+                if (fu_mul[i].instruction->discard)
+                    reg_status[fu_mul[i].fi].status = USED;
+                else
+                    reg_status[fu_mul[i].fi].status = BYPASS;
+
+                reg_status[fu_mul[i].fi].entry = fu_mul[i].instruction->entry;
+            }
+
             fu_mul[i].instruction->entry->state = READY;
-
-            if(fu_mul[i].instruction->discard)
-                reg_status[fu_mul[i].fi].status = USED;
-            else
-                reg_status[fu_mul[i].fi].status = BYPASS;
-
-            reg_status[fu_mul[i].fi].entry = fu_mul[i].instruction->entry;
         }
     }
 
@@ -478,16 +508,23 @@ void write(){
             printDebugMessage("Writing instruction to ROB (DIV)");
 
             fu_div[i].busy = 0;
-            fu_div[i].instruction->entry->out_reg = fu_div[i].fi;
-            fu_div[i].instruction->entry->data = fu_div[i].ri;
+            fu_div[i].instruction->entry->out_reg = IS_HILO;
+            fu_div[i].instruction->entry->hi = fu_div[i].hi;
+            fu_div[i].instruction->entry->lo = fu_div[i].lo;
+
+            if (fu_div[i].instruction->discard) {
+                reg_status[HI_REG].status = USED;
+                reg_status[LO_REG].status = USED;
+            }
+            else {
+                reg_status[HI_REG].status = BYPASS;
+                reg_status[LO_REG].status = BYPASS;
+
+                reg_status[HI_REG].entry = fu_div[i].instruction->entry;
+                reg_status[LO_REG].entry = fu_div[i].instruction->entry;
+            }
+
             fu_div[i].instruction->entry->state = READY;
-
-            if(fu_div[i].instruction->discard)
-                reg_status[fu_div[i].fi].status = USED;
-            else
-                reg_status[fu_div[i].fi].status = BYPASS;
-
-            reg_status[fu_div[i].fi].entry = fu_div[i].instruction->entry;
         }
     }
 
@@ -550,6 +587,7 @@ void write(){
             }
             else if (fu_add[i].instruction->write_flag == IS_MOVE){
                 fu_add[i].instruction->entry->out_reg = fu_add[i].fi;
+
                 if(fu_add[i].ri) fu_add[i].instruction->entry->data = fu_add[i].dj;
                 else fu_add[i].instruction->entry->data = registers[fu_add[i].fi];
 

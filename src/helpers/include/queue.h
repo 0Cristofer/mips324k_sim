@@ -15,6 +15,7 @@ typedef struct rob_entry rob_entry_t;
 typedef union queue_data queue_data_t;
 typedef struct queue queue_t;
 typedef struct queue_element queue_element_t;
+typedef struct functional_unit functional_unit_t;
 
 /**
  * Possible data types to be used in the queue.
@@ -22,6 +23,7 @@ typedef struct queue_element queue_element_t;
 union queue_data{
      instruction_data_t *instruction;
      rob_entry_t* entry;
+     functional_unit_t *f;
 };
 
 /**

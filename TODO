@@ -1,12 +1,6 @@
 TODO:
     - Ler o nome do program AKA ler o nome do arquivo de entrada até o ponto '.'
     - Fazer arquivo de saída final
-    - Instruções de multiplicação/divisão
-
-Ideias:
-    Multiplicação/divisão: Alterar funções expecificas para retornar long. Adicionar campos na unidade funcional para HILO.
-        Ao terminar de executar, enviar para o estágio de allign, onde o long vai ser quebrado em 2 (HILO). Fazer uma fila
-        para o allign
 
 Problemas:
     Executar a instrução no mesmo ciclo que emite ou só no próximo?

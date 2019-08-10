@@ -18,11 +18,14 @@
 #define NUM_REGISTERS 34
 #define MAX_INST_QUEUE_SIZE 4
 #define MAX_ROB_QUEUE_SIZE 16
+#define MAX_ISSUED_INST 2
+#define MAX_EFFECT_INST 1
 
 #define IS_NORMAL 64
 #define IS_BRANCH 65
 #define IS_MOVE 66
-#define IS_MUL 67
+#define IS_HILO 67
+#define IS_MUL 68
 
 /* Op code groups
     SPECIAL: ADD, AND, DIV, MFHI, MFLO, MOVN, MOVZ, MTHI, MTLO, MULT, NOP, NOR, OR, SUB, SYSCALL, XOR
@@ -66,8 +69,6 @@ enum rob_state{
     READY, NOT_READY
 };
 
-typedef struct functional_unit functional_unit_t;
-
 /**
  * Main instrucion structure. Holds all information about a instruction and all fields are filled at the end of the
  * decode stage
@@ -89,6 +90,7 @@ struct rob_entry{
     enum rob_state state;
     int out_reg;
     int data;
+    int hi, lo;
 };
 
 // General simulator variables
@@ -100,6 +102,7 @@ unsigned int *instructions;
 unsigned int registers[NUM_REGISTERS];
 extern unsigned int pc;
 extern queue_t instruction_queue;
+extern queue_t allign_queue;
 
 // General simulator functions
 
