@@ -33,21 +33,21 @@ void printRegister(enum register_name reg){
 
 void percentagePrediction(int total, int mistakes, int hits){
     printf("Previsão:\n");
-    printf("\tTotal de saltos: %d \n", total);
-    printf("\tAcertos: %d / %2.2f%% \n", hits , ((float) hits/ (float) total) * 100);
-    printf("\tErros: %d / %2.2f%% \n", mistakes, ((float) mistakes/ (float) total) * 100);
+    printf("\tTotal de saltos: \t%.2d \n", total);
+    printf("\tAcertos: \t\t\t%.2d (%2.2f%%) \n", hits , ((float) hits/ (float) total) * 100);
+    printf("\tErros: \t\t\t\t%.2d (%2.2f%%) \n\n", mistakes, ((float) mistakes/ (float) total) * 100);
 }
 
 void percentageInstruction(int total, int effected){
     printf("Instruções:\n");
-    printf("\tEmitidas: %d \n", total);
-    printf("\tEfetivadas: %d / %2.2f%% \n", effected, ((float) effected/ (float) total) * 100);
+    printf("\tEmitidas: \t\t\t%.2d \n", total);
+    printf("\tEfetivadas: \t\t%.2d (%2.2f%%) \n\n", effected, ((float) effected/ (float) total) * 100);
 }
 
 
 void printCycles(int cycles) {
     printf("Ciclos:\n");
-    printf("\t%d\n", cycles);
+    printf("\t%d ciclos\n\n", cycles);
 }
 
 void printCurrentCycle(int cycle) {
@@ -55,5 +55,9 @@ void printCurrentCycle(int cycle) {
 }
 
 void printInstruction(char *inst_str){
-    if (is_detail) printf("\t%s", inst_str);
+    if (is_detail) printf("\t\t%s", inst_str);
+}
+
+void printStageHeader(char *stage){
+    if (is_detail) printf("\t%s\n", stage);
 }

@@ -88,6 +88,8 @@ void writeProg(int total_instructions, char **inst_strs) {
     for (i = 0; i < total_instructions ; ++i) {
         printf("%s", inst_strs[i]);
     }
+
+    printf("\n");
 }
 
 void writeHexa(int total_instructions, unsigned int *insts) {
@@ -97,6 +99,8 @@ void writeHexa(int total_instructions, unsigned int *insts) {
     for (i = 0; i < total_instructions; ++i) {
         printf("\t%X\n", insts[i]);
     }
+
+    printf("\n");
 }
 
 void printHelp() {

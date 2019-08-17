@@ -15,5 +15,6 @@ void percentageInstruction(int total, int effected);
 void printCycles(int cycles);
 void printInstruction(char *int_str);
 void printCurrentCycle(int cycle);
+void printStageHeader(char *stage);
 
 #endif //MIPS324K_SIM_UTIL_H

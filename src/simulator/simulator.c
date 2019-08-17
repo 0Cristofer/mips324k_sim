@@ -94,6 +94,7 @@ void instruction(){
 
     printDebugMessage("Fetching instructions");
 
+    printStageHeader("Busca:");
     while(instruction_queue.size < MAX_INST_QUEUE_SIZE){
         if(pc == num_instructions){
             printDebugMessage("Out of instructions. Stopping fetch");
@@ -133,6 +134,7 @@ void execution(){
     if(has_error) return;
 
     printDebugMessage("---Execution stage---");
+    printStageHeader("Execução:");
 
     // Always run the ALU, if queues are empety and nothing ran, stop running
     running = runAlu() || (!((!instruction_queue.size) && (pc == num_instructions) && (!rob_queue.size)));
