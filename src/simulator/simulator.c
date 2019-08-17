@@ -279,6 +279,7 @@ void execution(){
                                     f->fk = rt;
                                     f->rj = 1;
                                     f->rk = 1;
+
                                     f->dj = readReg(rs);
                                     f->dk = readReg(rt);
                                     f->cicles_to_end = cicles_sub[sub_map[op_code]];

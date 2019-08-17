@@ -4,6 +4,7 @@
    Edited: 21/03/2019 */
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "include/util.h"
 
@@ -61,6 +62,35 @@ int readArgs(args_t* args, int argc, char** argv) {
     }
 
     return ok;
+}
+
+char *getFileName(char *filename){
+    char c, *name;
+    int start = 0, end, i = 0;
+
+    c = filename[0];
+
+    while (c != '\0'){
+        if (c == '.')
+            break;
+
+        if (c == '/')
+            start = i+1;
+
+        i++;
+        c = filename[i];
+    }
+
+    end = i;
+
+    name = malloc(end-start+1 * sizeof(char));
+
+    for(i = 0; i < end-start; i++){
+        name[i] = filename[i+start];
+    }
+    name[end-start] = '\0';
+
+    return name;
 }
 
 void writeBinary(char *binary_ouput_name, int total_instructions, unsigned int *prog_mem) {

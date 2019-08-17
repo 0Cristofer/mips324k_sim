@@ -31,6 +31,8 @@ int main(int argc, char** argv){
 
     printf("\tReading input assembly file.\n");
 
+    printf("name: %s\n", getFileName(args.input_name));
+
     ok = parseInput(args.input_name, &total_instructions, &insts, &inst_strs);
     if(!ok){
         printf("Failed to read input file, aborting simulation.\n");

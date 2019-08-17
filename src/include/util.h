@@ -40,4 +40,6 @@ void writeBinary(char *binary_ouput_name, int total_instructions, unsigned int *
  */
 void printHelp();
 
+char *getFileName(char *filename);
+
 #endif //MIPS324K_SIM_UTIL_H

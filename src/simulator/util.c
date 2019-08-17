@@ -16,6 +16,7 @@ void printDebugMessage(char *message){
     printf("DEBUG: %s\n", message);
 }
 
+
 void printDebugMessageInt(char *message, int d){
     if(!debug) return;
     printf("DEBUG: %s, %d\n", message, d);
