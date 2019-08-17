@@ -35,6 +35,12 @@ int readArgs(args_t* args, int argc, char** argv);
  */
 void writeBinary(char *binary_ouput_name, int total_instructions, unsigned int *prog_mem);
 
+void writeProg(int total_instructions, char **inst_strs);
+
+void writeHexa(int total_instructions, unsigned int *insts);
+
+void printCycles(int cycles);
+
 /**
  * Prints the default help message
  */

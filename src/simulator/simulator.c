@@ -10,21 +10,26 @@
 
 #include <stdlib.h>
 #include <stdint.h>
+#include <stdio.h>
 
 int debug;
 int has_error = 0;
+int is_detail;
 
 unsigned int pc;
 queue_t instruction_queue;
 queue_t rob_queue;
 queue_t allign_queue;
+char **inst_strs;
 
-void startSimulation(unsigned int *insts, unsigned int num_insts, int b){
+void startSimulation(unsigned int *insts, unsigned int num_insts, int b, char **insts_strs, int d) {
     debug = b;
     instructions = insts;
     running = 1;
     num_instructions = num_insts;
     pc = 0;
+    inst_strs = insts_strs;
+    is_detail = d;
 
     initQueue(&instruction_queue);
     initQueue(&rob_queue);
@@ -47,11 +52,15 @@ void clock(){
 
     while(running && (!has_error)){
         printDebugMessageInt("************** Cycle ************", cycle);
+        printCurrentCycle(cycle);
 
         pipeline();
 
         cycle++;
     }
+
+    printCycles(cycle);
+
 }
 
 void pipeline(){
@@ -66,6 +75,7 @@ void pipeline(){
 void instruction(){
     int next_pc;
     queue_data_t data;
+    static int cycle = 1;
 
     if(has_error) return;
 
@@ -105,7 +115,10 @@ void instruction(){
         next_pc = branchComponent(pc);
 
         updatePc(next_pc); // The PC increment will be given from the branch component
+
+        printInstruction(inst_strs[data.instruction->pc]);
     }
+
 }
 
 void execution(){

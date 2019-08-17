@@ -111,6 +111,24 @@ void writeBinary(char *binary_ouput_name, int total_instructions, unsigned int *
     fclose(output_b);
 }
 
+void writeProg(int total_instructions, char **inst_strs) {
+    int i;
+    printf("Programa:\n");
+
+    for (i = 0; i < total_instructions ; ++i) {
+        printf("%s", inst_strs[i]);
+    }
+}
+
+void writeHexa(int total_instructions, unsigned int *insts) {
+    int i;
+    printf("\nBinário:\n");
+
+    for (i = 0; i < total_instructions; ++i) {
+        printf("\t%X\n", insts[i]);
+    }
+}
+
 void printHelp() {
     printf("\t\tMIPS32 4K simulator\n");
     printf("Usage: ./mips324k_sim -i <prog>.asm [-o <prog>.s] [--detail] [-h]\n");
