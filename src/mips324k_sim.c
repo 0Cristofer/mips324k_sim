@@ -37,9 +37,13 @@ int main(int argc, char** argv){
         return 0;
     }
 
-    printf("\tTranslation done. Starting simulation...\n");
+    writeProg(total_instructions, inst_strs);
 
-    startSimulation(insts, (unsigned int) total_instructions, args.debug);
+    writeHexa(total_instructions, insts);
+
+    printf("\n\tTranslation done. Starting simulation...\n");
+
+    startSimulation(insts, (unsigned int) total_instructions, args.debug, inst_strs, args.detail);
 
     printf("\tEnd of simulation.\n");
 

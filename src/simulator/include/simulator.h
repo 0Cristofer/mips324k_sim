@@ -106,6 +106,7 @@ extern queue_t allign_queue;
 extern int total_jumps;
 extern int total_mistakes;
 extern int total_hits;
+extern int is_detail;
 
 // General simulator functions
 
@@ -115,7 +116,7 @@ extern int total_hits;
  * @param num_insts Number of instructions
  * @param b Debug mode, 0 to OFF, 1 to ON
  */
-void startSimulation(unsigned int *insts, unsigned int num_insts, int b);
+void startSimulation(unsigned int *insts, unsigned int num_insts, int b, char **insts_strs, int d);
 
 /**
  * Sets the error flags

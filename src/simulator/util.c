@@ -43,3 +43,17 @@ void percentageInstruction(int total, int effected){
     printf("\tEmitidas: %d \n", total);
     printf("\tEfetivadas: %d / %2.2f%% \n", effected, ((float) effected/ (float) total) * 100);
 }
+
+
+void printCycles(int cycles) {
+    printf("Ciclos:\n");
+    printf("\t%d\n", cycles);
+}
+
+void printCurrentCycle(int cycle) {
+    if (is_detail) printf("\nCiclo %d:\n", cycle);
+}
+
+void printInstruction(char *inst_str){
+    if (is_detail) printf("\t%s", inst_str);
+}
