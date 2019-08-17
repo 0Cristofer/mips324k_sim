@@ -30,3 +30,16 @@ void printRegister(enum register_name reg){
     if(!debug) return;
     printf("DEBUG: Printing register %s, %d\n", register_names[reg], registers[reg]);
 }
+
+void printCycles(int cycles) {
+    printf("Ciclos:\n");
+    printf("\t%d\n", cycles);
+}
+
+void printCurrentCycle(int cycle) {
+    if (is_detail) printf("\nCiclo %d:\n", cycle);
+}
+
+void printInstruction(char *inst_str){
+    if (is_detail) printf("\t%s", inst_str);
+}

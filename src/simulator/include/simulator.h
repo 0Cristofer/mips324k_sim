@@ -103,6 +103,7 @@ unsigned int registers[NUM_REGISTERS];
 extern unsigned int pc;
 extern queue_t instruction_queue;
 extern queue_t allign_queue;
+extern int is_detail;
 
 // General simulator functions
 
@@ -112,7 +113,7 @@ extern queue_t allign_queue;
  * @param num_insts Number of instructions
  * @param b Debug mode, 0 to OFF, 1 to ON
  */
-void startSimulation(unsigned int *insts, unsigned int num_insts, int b);
+void startSimulation(unsigned int *insts, unsigned int num_insts, int b, char **insts_strs, int d);
 
 /**
  * Sets the error flags
