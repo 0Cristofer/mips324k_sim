@@ -8,11 +8,14 @@
 #include "include/util.h"
 #include "include/alu.h"
 
+
 #include <stdlib.h>
 #include <stdint.h>
 
 int debug;
 int has_error = 0;
+int total_emited = 0;
+int total_effected = 0;
 
 unsigned int pc;
 queue_t instruction_queue;
@@ -37,6 +40,7 @@ void startSimulation(unsigned int *insts, unsigned int num_insts, int b){
 
     clock();
 
+
     printRegister(V0);
 
     cleanup();
@@ -52,6 +56,9 @@ void clock(){
 
         cycle++;
     }
+    percentagePrediction(total_jumps, total_mistakes, total_hits);
+    percentageInstruction(total_emited,total_effected);
+
 }
 
 void pipeline(){
@@ -349,6 +356,7 @@ void execution(){
                         if (has_functional_unit) {
                             inst_data->f = f;
                             instruction = popQueue(&instruction_queue).instruction->instruction;
+                            total_emited++;
                             issued = issued + 1;
 
                             f->busy = 1;
@@ -393,6 +401,7 @@ void execution(){
                             inst_data->f = f;
 
                             instruction = popQueue(&instruction_queue).instruction->instruction;
+                            total_emited++;
                             issued = issued + 1;
 
                             offset = (uint16_t) instruction & (unsigned int) 65535;
@@ -448,6 +457,7 @@ void execution(){
                             inst_data->f = f;
 
                             instruction = popQueue(&instruction_queue).instruction->instruction;
+                            total_emited++;
                             issued = issued + 1;
 
                             f->busy = 1;
@@ -585,6 +595,7 @@ void execution(){
                             f->cicles_to_end = cicles_add[add_map[op_code]];
 
                             instruction = popQueue(&instruction_queue).instruction->instruction;
+                            total_emited++;
                             issued = issued + 1;
 
                             f->busy = 1;
@@ -689,6 +700,7 @@ void effect(){
                 data = popQueue(&rob_queue);
 
                 if(!data.entry->instruction->discard) {
+                    total_effected++;
                     switch (data.entry->out_reg){
                         case IS_BRANCH:
                             break;

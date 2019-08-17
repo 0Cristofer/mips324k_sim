@@ -30,3 +30,16 @@ void printRegister(enum register_name reg){
     if(!debug) return;
     printf("DEBUG: Printing register %s, %d\n", register_names[reg], registers[reg]);
 }
+
+void percentagePrediction(int total, int mistakes, int hits){
+    printf("Previsão:\n");
+    printf("\tTotal de saltos: %d \n", total);
+    printf("\tAcertos: %d / %2.2f%% \n", hits , ((float) hits/ (float) total) * 100);
+    printf("\tErros: %d / %2.2f%% \n", mistakes, ((float) mistakes/ (float) total) * 100);
+}
+
+void percentageInstruction(int total, int effected){
+    printf("Instruções:\n");
+    printf("\tEmitidas: %d \n", total);
+    printf("\tEfetivadas: %d / %2.2f%% \n", effected, ((float) effected/ (float) total) * 100);
+}

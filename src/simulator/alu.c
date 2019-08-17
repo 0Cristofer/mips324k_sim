@@ -32,6 +32,9 @@ int cicles_sub[] = {C_SUB};
 int cicles_add[] = {C_ADD, C_AND, C_MFHI, C_MFLO, C_MOVN, C_MOVZ, C_MTHI, C_MTLO, C_NOR, C_OR, C_XOR, C_BGEZ, C_BLTZ, C_ADD,
                     C_AND, C_BEQ, C_BEQL, C_BGTZ, C_BLEZ, C_BNE, C_LUI, C_OR, C_XOR};
 
+int total_mistakes = 0;
+int total_hits = 0;
+
 int add(int rs, int rt){
     printDebugMessage("Running ADD");
 
@@ -578,6 +581,9 @@ void write(){
                         pc = fu_add[i].instruction->pc + fu_add[i].instruction->imm;
                     else
                         pc = fu_add[i].instruction->pc + 1;
+                    total_mistakes++;
+                } else {
+                    total_hits++;
                 }
 
                 if(current_branch_inst == fu_add[i].instruction)

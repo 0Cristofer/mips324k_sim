@@ -103,6 +103,9 @@ unsigned int registers[NUM_REGISTERS];
 extern unsigned int pc;
 extern queue_t instruction_queue;
 extern queue_t allign_queue;
+extern int total_jumps;
+extern int total_mistakes;
+extern int total_hits;
 
 // General simulator functions
 
