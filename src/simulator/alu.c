@@ -415,9 +415,12 @@ int runAlu(){
     int i, ran = 0;
 
     printDebugMessage("Running ALU");
+    printStageHeader("Executando:");
 
     for(i = 0; i < NUM_FU_MUL; i++) {
         if(!fu_mul[i].busy) continue;
+
+        printInstruction(inst_strs[fu_mul[i].instruction->pc]);
 
         ran = 1;
 
@@ -428,6 +431,8 @@ int runAlu(){
     for(i = 0; i < NUM_FU_DIV; i++) {
         if(!fu_div[i].busy) continue;
 
+        printInstruction(inst_strs[fu_div[i].instruction->pc]);
+
         ran = 1;
 
         if(fu_div[i].rj && fu_div[i].rk)
@@ -436,6 +441,8 @@ int runAlu(){
 
     for(i = 0; i < NUM_FU_SUB; i++) {
         if(!fu_sub[i].busy) continue;
+
+        printInstruction(inst_strs[fu_sub[i].instruction->pc]);
 
         ran = 1;
 
@@ -446,11 +453,15 @@ int runAlu(){
     for(i = 0; i < NUM_FU_ADD; i++) {
         if(!fu_add[i].busy) continue;
 
+        printInstruction(inst_strs[fu_add[i].instruction->pc]);
+
         ran = 1;
 
         if(fu_add[i].rj && fu_add[i].rk)
             runAdd(i);
     }
+
+    printNewLine();
 
     return ran;
 }
@@ -464,6 +475,8 @@ void write(){
 
         if(fu_mul[i].instruction->is_ready){
             printDebugMessage("Writing instruction to ROB (MUL)");
+
+            printInstruction(inst_strs[fu_mul[i].instruction->pc]);
 
             fu_mul[i].busy = 0;
 
@@ -509,6 +522,7 @@ void write(){
 
         if(fu_div[i].instruction->is_ready){
             printDebugMessage("Writing instruction to ROB (DIV)");
+            printInstruction(inst_strs[fu_div[i].instruction->pc]);
 
             fu_div[i].busy = 0;
             fu_div[i].instruction->entry->out_reg = IS_HILO;
@@ -536,6 +550,7 @@ void write(){
 
         if(fu_sub[i].instruction->is_ready){
             printDebugMessage("Writing instruction to ROB (SUB)");
+            printInstruction(inst_strs[fu_sub[i].instruction->pc]);
 
             fu_sub[i].busy = 0;
             fu_sub[i].instruction->entry->out_reg = fu_sub[i].fi;
@@ -556,6 +571,7 @@ void write(){
 
         if(fu_add[i].instruction->is_ready){
             printDebugMessage("Writing instruction to ROB (ADD)");
+            printInstruction(inst_strs[fu_add[i].instruction->pc]);
 
             fu_add[i].busy = 0;
 
@@ -619,6 +635,16 @@ void write(){
 
             fu_add[i].instruction->entry->state = READY;
 
+        }
+    }
+}
+
+void printBypass(){
+    int i;
+
+    for (i = 0; i < NUM_REGISTERS; ++i) {
+        if (reg_status[i].status == BYPASS){
+            printRegisterName(i);
         }
     }
 }

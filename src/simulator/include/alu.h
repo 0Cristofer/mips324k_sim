@@ -129,4 +129,6 @@ functional_unit_t *hasFuAdd();
  */
 int runAlu();
 
+void printBypass();
+
 #endif //MIPS324K_SIM_ALU_H

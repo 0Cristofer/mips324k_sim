@@ -60,11 +60,12 @@ void clock(){
         cycle++;
     }
     percentagePrediction(total_jumps, total_mistakes, total_hits);
-    percentageInstruction(total_emited,total_effected);
     printCycles(cycle);
+    percentageInstruction(total_emited,total_effected);
 }
 
 void pipeline(){
+    printBypassing();
     effect();
     writeback();
     alignAccumulate();
@@ -76,25 +77,26 @@ void pipeline(){
 void instruction(){
     int next_pc;
     queue_data_t data;
-    static int cycle = 1;
 
     if(has_error) return;
 
     printDebugMessage("---Instruction stage---");
+    printStageHeader("Busca:");
 
     if(instruction_queue.size){ // If there is elements in the instruction queue, do nothing
         printDebugMessage("Instruction queue has elements, skipping fetch");
+        printNewLine();
         return;
     }
 
     if(pc == num_instructions){
         printDebugMessage("PC at the end of program, skipping fetch");
+        printNewLine();
         return;
     }
 
     printDebugMessage("Fetching instructions");
 
-    printStageHeader("Busca:");
     while(instruction_queue.size < MAX_INST_QUEUE_SIZE){
         if(pc == num_instructions){
             printDebugMessage("Out of instructions. Stopping fetch");
@@ -120,6 +122,8 @@ void instruction(){
 
         printInstruction(inst_strs[data.instruction->pc]);
     }
+
+    printNewLine();
 }
 
 void execution(){
@@ -134,10 +138,11 @@ void execution(){
     if(has_error) return;
 
     printDebugMessage("---Execution stage---");
-    printStageHeader("Execução:");
 
     // Always run the ALU, if queues are empety and nothing ran, stop running
     running = runAlu() || (!((!instruction_queue.size) && (pc == num_instructions) && (!rob_queue.size)));
+
+    printStageHeader("Emitindo:");
 
     if(!instruction_queue.size){
         printDebugMessage("Instruction queue is empety, skipping");
@@ -364,6 +369,8 @@ void execution(){
                         if (has_functional_unit) {
                             inst_data->f = f;
                             instruction = popQueue(&instruction_queue).instruction->instruction;
+                            printInstruction(inst_strs[inst_data->pc]);
+
                             total_emited++;
                             issued = issued + 1;
 
@@ -409,6 +416,7 @@ void execution(){
                             inst_data->f = f;
 
                             instruction = popQueue(&instruction_queue).instruction->instruction;
+                            printInstruction(inst_strs[inst_data->pc]);
                             total_emited++;
                             issued = issued + 1;
 
@@ -465,6 +473,7 @@ void execution(){
                             inst_data->f = f;
 
                             instruction = popQueue(&instruction_queue).instruction->instruction;
+                            printInstruction(inst_strs[inst_data->pc]);
                             total_emited++;
                             issued = issued + 1;
 
@@ -603,6 +612,7 @@ void execution(){
                             f->cicles_to_end = cicles_add[add_map[op_code]];
 
                             instruction = popQueue(&instruction_queue).instruction->instruction;
+                            printInstruction(inst_strs[inst_data->pc]);
                             total_emited++;
                             issued = issued + 1;
 
@@ -638,11 +648,15 @@ void execution(){
             }
         }
     }
+
+    printNewLine();
 }
 
 void memory(){
     if(has_error) return;
+    printStageHeader("Busca da memória:");
     printDebugMessage("---Memory Stage---");
+    printNewLine();
 }
 
 void alignAccumulate(){
@@ -651,9 +665,11 @@ void alignAccumulate(){
 
     if(has_error) return;
     printDebugMessage("---Allign/Accumulate Stage---");
+    printStageHeader("Alinhamento:");
 
     while(allign_queue.size){
         data = popQueue(&allign_queue);
+        printInstruction(inst_strs[data.instruction->pc]);
 
         switch (data.f->op){
             case MULT:
@@ -684,13 +700,19 @@ void alignAccumulate(){
 
         data.f->instruction->is_ready = 1;
     }
+
+    printNewLine();
 }
 
 void writeback(){
     if(has_error) return;
+
     printDebugMessage("---Writeback Stage---");
+    printStageHeader("Escrita:");
 
     write();
+
+    printNewLine();
 }
 
 void effect(){
@@ -699,6 +721,7 @@ void effect(){
 
     if(has_error) return;
     printDebugMessage("---Effect Stage---");
+    printStageHeader("Efetivando:");
 
     while(rob_queue.size && (effected < MAX_EFFECT_INST)){
         data = rob_queue.head->data;
@@ -709,6 +732,7 @@ void effect(){
 
                 if(!data.entry->instruction->discard) {
                     total_effected++;
+                    printInstruction(inst_strs[data.entry->instruction->pc]);
                     switch (data.entry->out_reg){
                         case IS_BRANCH:
                             break;
@@ -753,6 +777,14 @@ void effect(){
             break;
         }
     }
+
+    printNewLine();
+}
+
+void printBypassing(){
+    printStageHeader("Bypassing:");
+    printBypass();
+    printNewLine();
 }
 
 void updatePc(int next_pc){

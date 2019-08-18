@@ -16,5 +16,7 @@ void printCycles(int cycles);
 void printInstruction(char *int_str);
 void printCurrentCycle(int cycle);
 void printStageHeader(char *stage);
+void printNewLine();
+void printRegisterName(enum register_name reg);
 
 #endif //MIPS324K_SIM_UTIL_H

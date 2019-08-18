@@ -54,9 +54,17 @@ int parseInput(char *file_name, int *n_inst, unsigned int **insts, char ***insts
     i = 1;
     j = 0;
     while(getline(&line, &len, yyin) != -1){
+        len = strlen(line);
 
         if(i == inst_lines[j]) {
             (*insts_strs)[j] = malloc(sizeof(char) * (len+1));
+
+            if(line[len-1] == '\n'){
+                line[len-1]= '\0';
+            } else {
+                line[len] = '\0';
+            }
+
             strcpy((*insts_strs)[j], line);
             j = j + 1;
         }

@@ -12,7 +12,7 @@
 
 two_bit_t bht[BRENCH_PRED_SIZE];
 instruction_data_t *current_branch_inst = NULL;
-int total_jumps;
+int total_jumps = 0;
 
 void initBranchPredictor(){
     int i;
