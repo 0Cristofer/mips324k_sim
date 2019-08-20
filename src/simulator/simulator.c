@@ -41,6 +41,7 @@ void startSimulation(unsigned int *insts, unsigned int num_insts, int b, char **
     registers[ZERO] = 0;
     registers[T0] = 0;
 
+    resetAll();
     clock();
 
     printRegistersContent();
@@ -67,12 +68,20 @@ void clock(){
 
 void pipeline(){
     printBypassing();
+    nextPrintStage();
     effect();
+    nextPrintStage();
     writeback();
+    nextPrintStage();
     alignAccumulate();
+    nextPrintStage();
     memory();
+    nextPrintStage();
     execution();
+    nextPrintStage();
     instruction();
+    printAll();
+    resetAll();
 }
 
 void instruction(){

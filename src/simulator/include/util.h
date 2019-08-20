@@ -6,6 +6,9 @@
 #ifndef MIPS324K_SIM_UTIL_H
 #define MIPS324K_SIM_UTIL_H
 
+void printAll();
+void resetAll();
+void nextPrintStage();
 void printDebugMessage(char *message);
 void printDebugMessageInt(char *message, int d);
 void printDebugError(char *stage, char *message);

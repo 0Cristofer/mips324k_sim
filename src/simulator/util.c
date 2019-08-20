@@ -6,16 +6,40 @@
 #include <stdio.h>
 
 #include "include/simulator.h"
-#include "include/util.h"
 
 char*register_names[] = {"zero", "at", "v0", "v1", "a0", "a1", "a2", "a3", "t0", "t1", "t2", "t3", "t4", "t5", "t6", "t7",
                          "s0", "s1", "s2", "s3", "s4", "s5", "s5", "s7", "t8", "t9", "k0", "k1", "gp", "sp", "fp", "ra", "hi", "lo"};
+
+char stage_strings[7][200];
+int buffer_position[7];
+int current_stage;
+
+void printAll(){
+    int i;
+    for ( i = 6; i >= 0 ; --i) {
+        printf("%s", stage_strings[i]);
+    }
+};
+
+void resetAll(){
+    int i;
+
+    for (i = 0; i < 7; ++i) {
+        stage_strings[i][0] = '\0';
+        buffer_position[i] = 0;
+    }
+
+    current_stage = 0;
+}
+
+void nextPrintStage(){
+    current_stage++;
+}
 
 void printDebugMessage(char *message){
     if(!debug) return;
     printf("DEBUG: %s\n", message);
 }
-
 
 void printDebugMessageInt(char *message, int d){
     if(!debug) return;
@@ -62,19 +86,27 @@ void printCurrentCycle(int cycle) {
 }
 
 void printInstruction(char *inst_str){
-    if (is_detail) printf("\t\t%s\n", inst_str);
+    if (is_detail)
+        buffer_position[current_stage] +=
+                sprintf(stage_strings[current_stage]+buffer_position[current_stage], "\t\t%s\n", inst_str);
 }
 
 void printStageHeader(char *stage){
-    if (is_detail) printf("\t%s\n", stage);
+    if (is_detail)
+        buffer_position[current_stage] +=
+                sprintf(stage_strings[current_stage]+buffer_position[current_stage], "\t%s\n", stage);
 }
 
 void printRegisterName(enum register_name reg){
-    if (is_detail) printf("\t\t\t%s\n", register_names[reg]);
+    if (is_detail)
+        buffer_position[current_stage] +=
+                sprintf(stage_strings[current_stage]+buffer_position[current_stage], "\t\t\t%s\n", register_names[reg]);
 }
 
 void printNewLine(){
-    if (is_detail) printf("\n");
+    if (is_detail)
+        buffer_position[current_stage] +=
+                sprintf(stage_strings[current_stage]+buffer_position[current_stage],"\n");
 }
 
 void printRegistersContent(){
