@@ -116,17 +116,21 @@ void writeProg(int total_instructions, char **inst_strs) {
     printf("Programa:\n");
 
     for (i = 0; i < total_instructions ; ++i) {
-        printf("%s", inst_strs[i]);
+        printf("\t%s\n", inst_strs[i]);
     }
+
+    printf("\n");
 }
 
 void writeHexa(int total_instructions, unsigned int *insts) {
     int i;
-    printf("\nBinário:\n");
+    printf("Binário:\n");
 
     for (i = 0; i < total_instructions; ++i) {
         printf("\t%X\n", insts[i]);
     }
+
+    printf("\n");
 }
 
 void printHelp() {

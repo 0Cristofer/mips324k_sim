@@ -12,6 +12,7 @@
 
 two_bit_t bht[BRENCH_PRED_SIZE];
 instruction_data_t *current_branch_inst = NULL;
+int total_jumps = 0;
 
 void initBranchPredictor(){
     int i;
@@ -51,6 +52,8 @@ int twoBitPred(uint16_t index){
  */
 int branchPredictor(uint16_t offset, instruction_data_t *inst) {
     current_branch_inst = inst;
+
+    total_jumps++;
 
     printDebugMessageInt("Predicting branch", inst->pc);
 

@@ -103,7 +103,11 @@ unsigned int registers[NUM_REGISTERS];
 extern unsigned int pc;
 extern queue_t instruction_queue;
 extern queue_t allign_queue;
+extern int total_jumps;
+extern int total_mistakes;
+extern int total_hits;
 extern int is_detail;
+extern char **inst_strs;
 
 // General simulator functions
 
@@ -175,5 +179,6 @@ void effect();
  * @param next_pc The offset to be added to the program counter
  */
 void updatePc(int next_pc);
+void printBypassing();
 
 #endif //MIPS324K_SIM_SIMULATOR_H
