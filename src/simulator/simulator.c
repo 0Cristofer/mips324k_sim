@@ -43,7 +43,7 @@ void startSimulation(unsigned int *insts, unsigned int num_insts, int b, char **
 
     clock();
 
-    printRegister(V0);
+    printRegistersContent();
 
     cleanup();
 }
@@ -59,6 +59,7 @@ void clock(){
 
         cycle++;
     }
+
     percentagePrediction(total_jumps, total_mistakes, total_hits);
     printCycles(cycle);
     percentageInstruction(total_emited,total_effected);
@@ -138,9 +139,6 @@ void execution(){
     if(has_error) return;
 
     printDebugMessage("---Execution stage---");
-
-    // Always run the ALU, if queues are empety and nothing ran, stop running
-    running = runAlu() || (!((!instruction_queue.size) && (pc == num_instructions) && (!rob_queue.size)));
 
     printStageHeader("Emitindo:");
 
@@ -651,6 +649,9 @@ void execution(){
     }
 
     printNewLine();
+
+    // Always run the ALU, if queues are empety and nothing ran, stop running
+    running = runAlu() || (!((!instruction_queue.size) && (pc == num_instructions) && (!rob_queue.size)));
 }
 
 void memory(){
@@ -665,6 +666,7 @@ void alignAccumulate(){
     long hilo;
 
     if(has_error) return;
+
     printDebugMessage("---Allign/Accumulate Stage---");
     printStageHeader("Alinhamento:");
 

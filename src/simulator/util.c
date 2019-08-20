@@ -27,7 +27,7 @@ void printDebugError(char *stage, char *message){
     fprintf(stderr, "ERROR: stage - %s, message: %s\n", stage, message);
 }
 
-void printRegister(enum register_name reg){
+void printDebugRegister(enum register_name reg){
     if(!debug) return;
     printf("DEBUG: Printing register %s, %d\n", register_names[reg], registers[reg]);
 }
@@ -70,9 +70,17 @@ void printStageHeader(char *stage){
 }
 
 void printRegisterName(enum register_name reg){
-    printf("\t\t\t%s\n", register_names[reg]);
+    if (is_detail) printf("\t\t\t%s\n", register_names[reg]);
 }
 
 void printNewLine(){
+    if (is_detail) printf("\n");
+}
+
+void printRegistersContent(){
+    int i;
+
+    printf ("Conteúdo dos registradores:\n");
+    for (i = 0; i < NUM_REGISTERS; i++) printf("\t%s: %d\n", register_names[i], registers[i]);
     printf("\n");
 }
