@@ -6,7 +6,7 @@
 #ifndef MIPS324K_SIM_UTIL_H
 #define MIPS324K_SIM_UTIL_H
 
-void printAll();
+void printAllStages();
 void resetAll();
 void nextPrintStage();
 void printDebugMessage(char *message);
@@ -22,5 +22,6 @@ void printStageHeader(char *stage);
 void printNewLine();
 void printRegisterName(enum register_name reg);
 void printRegistersContent();
+void printAll();
 
 #endif //MIPS324K_SIM_UTIL_H

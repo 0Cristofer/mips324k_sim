@@ -44,6 +44,8 @@ void startSimulation(unsigned int *insts, unsigned int num_insts, int b, char **
     resetAll();
     clock();
 
+    printAll();
+    percentageInstruction(total_emited,total_effected);
     printRegistersContent();
 
     cleanup();
@@ -63,7 +65,6 @@ void clock(){
 
     percentagePrediction(total_jumps, total_mistakes, total_hits);
     printCycles(cycle);
-    percentageInstruction(total_emited,total_effected);
 }
 
 void pipeline(){
@@ -80,7 +81,7 @@ void pipeline(){
     execution();
     nextPrintStage();
     instruction();
-    printAll();
+    printAllStages();
     resetAll();
 }
 
@@ -124,13 +125,12 @@ void instruction(){
 
         printDebugMessageInt("\tFetched instruction", pc);
 
+        printInstruction(inst_strs[data.instruction->pc]);
         pushQueue(&instruction_queue, data);
 
         next_pc = branchComponent(pc);
 
         updatePc(next_pc); // The PC increment will be given from the branch component
-
-        printInstruction(inst_strs[data.instruction->pc]);
     }
 
     printNewLine();
@@ -681,7 +681,7 @@ void alignAccumulate(){
 
     while(allign_queue.size){
         data = popQueue(&allign_queue);
-        printInstruction(inst_strs[data.instruction->pc]);
+        printInstruction(inst_strs[data.f->instruction->pc]);
 
         switch (data.f->op){
             case MULT:
