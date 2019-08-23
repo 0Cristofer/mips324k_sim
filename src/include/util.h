@@ -1,7 +1,7 @@
 /* Mips32 4K simulator helper functions
    Authors: Cristofer Oswald
    Created: 21/03/2019
-   Edited: 21/03/2019 */
+   Edited: 22/08/2019 */
 
 #ifndef MIPS324K_SIM_UTIL_H
 #define MIPS324K_SIM_UTIL_H
@@ -10,7 +10,9 @@
 
 #define ARGSSTR "hbi:o:d"
 
-typedef struct{
+extern FILE *out_file;
+
+typedef struct {
     int help;
     int detail;
     int debug;
@@ -25,7 +27,7 @@ typedef struct{
  * @param argv Argument verbose from system
  * @return 1 on success, else 0
  */
-int readArgs(args_t* args, int argc, char** argv);
+int readArgs(args_t *args, int argc, char **argv);
 
 /**
  * Writes a text file with all instructions in hexadecimal
@@ -35,9 +37,9 @@ int readArgs(args_t* args, int argc, char** argv);
  */
 void writeBinary(char *binary_ouput_name, int total_instructions, unsigned int *prog_mem);
 
-void writeProg(int total_instructions, char **inst_strs);
+void writeProgramToOutput(char *input_name);
 
-void writeHexa(int total_instructions, unsigned int *insts);
+void writeBinaryToOutput(int total_instructions, unsigned int *insts);
 
 void printCycles(int cycles);
 
@@ -46,6 +48,10 @@ void printCycles(int cycles);
  */
 void printHelp();
 
-char *getFileName(char *filename);
+char *getFileName(const char *filename);
+
+void startOutFile(char *prog_name);
+
+void endOutFile();
 
 #endif //MIPS324K_SIM_UTIL_H

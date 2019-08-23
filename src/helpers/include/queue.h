@@ -20,16 +20,16 @@ typedef struct functional_unit functional_unit_t;
 /**
  * Possible data types to be used in the queue.
  */
-union queue_data{
-     instruction_data_t *instruction;
-     rob_entry_t* entry;
-     functional_unit_t *f;
+union queue_data {
+    instruction_data_t *instruction;
+    rob_entry_t *entry;
+    functional_unit_t *f;
 };
 
 /**
  * Queue head, holds basic information about the hole queue.
  */
-struct queue{
+struct queue {
     int size;
     queue_element_t *head;
     queue_element_t *tail;
@@ -38,10 +38,10 @@ struct queue{
 /**
  * Queue main structure, holds information of a single queue element.
  */
-struct queue_element{
+struct queue_element {
     queue_data_t data;
-    queue_element_t* next;
-    queue_element_t* prev;
+    queue_element_t *next;
+    queue_element_t *prev;
 };
 
 /**

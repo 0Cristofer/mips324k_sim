@@ -16,20 +16,22 @@ extern int current_inst;
 extern FILE *yyin;
 
 int yylex();
+
 int yyparse();
+
 void yyerror(char *s);
 
 /* Parser helper data structures/definitions */
 
-typedef struct{
+typedef struct {
     char *label;
     int inst;
-}label_def_t;
+} label_def_t;
 
-typedef struct{
-    label_def_t* label;
+typedef struct {
+    label_def_t *label;
     int inst;
-}label_use_t;
+} label_use_t;
 
 /**
  * Parses the input file, converting the assembly code to MIPS32 4K binary instructions
@@ -42,22 +44,31 @@ typedef struct{
 int parseInput(char *file_name, int *n_inst, unsigned int **insts, char ***insts_strs);
 
 void add3RegIns(unsigned int op_code, unsigned int rd, unsigned int rs, unsigned int rt);
+
 void add2RegIns(unsigned int op_code, unsigned int rs, unsigned int rt);
+
 void add1RegIns(unsigned int op_code, unsigned int rd);
 
 void add2RegImmIns(unsigned int op_code, unsigned int rt, unsigned int rs, int16_t immediate);
+
 void add1RegImmIns(unsigned int op_code, unsigned int rt, int16_t immediate);
 
 void add2RegOffsetIns(unsigned int op_code, unsigned int rs, unsigned int rt);
+
 void add1RegOffsetIns(unsigned int op_code, unsigned int rs);
+
 void addOffsetIns(unsigned int op_code);
 
 void addSyscall(unsigned int op_code);
 
-int newLabel(char* label);
+int newLabel(char *label);
+
 void useLabel(char *label);
+
 int findLabel(char *label);
+
 void addLine(int line);
+
 void endParse();
 
 #endif //MIPS324K_SIM_PARSER_H

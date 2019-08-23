@@ -3,12 +3,11 @@
    Created: 22/05/2019
    Edited: 27/05/2019 */
 
-
 #include <stdlib.h>
 
-#include "src/helpers/include/linked_list.h"
+#include "include/linked_list.h"
 
-linked_list_t *insertElement(linked_list_t *list, instruction_data_t *data){
+linked_list_t *insertElement(linked_list_t *list, instruction_data_t *data) {
     linked_list_t *l;
 
     l = malloc(sizeof(linked_list_t));
@@ -18,7 +17,7 @@ linked_list_t *insertElement(linked_list_t *list, instruction_data_t *data){
     return l;
 }
 
-linked_list_t *removeElement(linked_list_t *list){
+linked_list_t *removeElement(linked_list_t *list) {
     linked_list_t *l;
 
     l = list->next;
@@ -28,10 +27,10 @@ linked_list_t *removeElement(linked_list_t *list){
     return l;
 }
 
-void clearList(linked_list_t *list){
+void clearList(linked_list_t *list) {
     linked_list_t *l;
 
-    while(list){
+    while (list) {
         l = list;
         list = list->next;
         removeElement(l);

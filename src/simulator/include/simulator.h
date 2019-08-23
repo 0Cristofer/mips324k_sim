@@ -1,12 +1,13 @@
 /* Mips32 4K simulator implementations file
    Authors: Cristofer Oswald
    Created: 29/03/2019
-   Edited: 27/05/2019 */
+   Edited: 17/08/2019 */
 
 #ifndef MIPS324K_SIM_SIMULATOR_H
 #define MIPS324K_SIM_SIMULATOR_H
 
 #include <stdint-gcc.h>
+#include <bits/types/FILE.h>
 
 #include "../../helpers/include/queue.h"
 #include "../../helpers/include/linked_list.h"
@@ -37,14 +38,14 @@
 /**
  * Types of op codes
  */
-enum op_types{
+enum op_types {
     SPECIAL, REGIMM, SPECIAL2, NONE
 };
 
 /**
  * Op codes
  */
-enum op_codes{
+enum op_codes {
     ADD = 32, ADDI = 8, AND = 36, ANDI = 12,
     B = 4, BEQ = 4, BEQL = 20, BGEZ = 1, BGTZ = 7, BLEZ = 6, BLTZ = 0, BNE = 5,
     DIV = 26,
@@ -59,13 +60,13 @@ enum op_codes{
 
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "OCUnusedGlobalDeclarationInspection"
-enum register_name{
+enum register_name {
     ZERO = 0, AT, V0, V1, A0, A1, A2, A3, T0, T1, T2, T3, T4, T5, T6, T7, S0, S1, S2, S3, S4, S5, S6, S7, T8, T9,
     K0, K1, GP, SP, FP, RA, HI, LO
 };
 #pragma clang diagnostic pop
 
-enum rob_state{
+enum rob_state {
     READY, NOT_READY
 };
 
@@ -73,7 +74,7 @@ enum rob_state{
  * Main instrucion structure. Holds all information about a instruction and all fields are filled at the end of the
  * decode stage
  */
-struct instruction_data{
+struct instruction_data {
     unsigned int instruction;
     unsigned int op_type, op_code;
     unsigned int rd, rs, rt;
@@ -85,8 +86,8 @@ struct instruction_data{
     rob_entry_t *entry;
 };
 
-struct rob_entry{
-    instruction_data_t* instruction;
+struct rob_entry {
+    instruction_data_t *instruction;
     enum rob_state state;
     int out_reg;
     int data;
@@ -117,7 +118,7 @@ extern char **inst_strs;
  * @param num_insts Number of instructions
  * @param b Debug mode, 0 to OFF, 1 to ON
  */
-void startSimulation(unsigned int *insts, unsigned int num_insts, int b, char **insts_strs, int d);
+void startSimulation(unsigned int *insts, unsigned int num_insts, int b, char **insts_strs, int d, FILE *out_file);
 
 /**
  * Sets the error flags
@@ -179,6 +180,7 @@ void effect();
  * @param next_pc The offset to be added to the program counter
  */
 void updatePc(int next_pc);
+
 void printBypassing();
 
 #endif //MIPS324K_SIM_SIMULATOR_H

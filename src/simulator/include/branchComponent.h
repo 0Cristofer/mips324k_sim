@@ -1,7 +1,7 @@
 /* Mips32 4K simulator branch component header file
    Authors: Cristofer Oswald
    Created: 17/04/2019
-   Edited: 17/04/2019 */
+   Edited: 04/07/2019 */
 
 #ifndef MIPS324K_SIM_BRANCHCOMPONENT_H
 #define MIPS324K_SIM_BRANCHCOMPONENT_H
@@ -14,17 +14,17 @@
 /**
  * Structure used in the two bit branch predictor.
  */
-typedef struct{
+typedef struct {
     unsigned int is_new : 1;
     unsigned int pred : 2;
-}two_bit_t;
+} two_bit_t;
 
 /**
  * Verifies if this is instruction is being speculated. If there it comes from an unresolved branch, adds it the
  * its speculated instrucions, else does nothing.
  * @param inst_data The instruction data
  */
-void addSpeculative(instruction_data_t* inst_data);
+void addSpeculative(instruction_data_t *inst_data);
 
 /**
  * Branch component is the first semi-processing of an instruction. Must happen right after a instruction is put in the

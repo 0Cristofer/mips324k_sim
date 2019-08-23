@@ -1,15 +1,15 @@
 /* Mips32 4K simulator ALU header file
    Authors: Cristofer Oswald
    Created: 16/05/2019
-   Edited: 27/05/2019 */
+   Edited: 06/07/2019 */
 
 #ifndef MIPS324K_SIM_ALU_H
 #define MIPS324K_SIM_ALU_H
 
-#define NUM_FU_MUL 2 //2
-#define NUM_FU_DIV 2 //2
-#define NUM_FU_SUB 1 //1
-#define NUM_FU_ADD 1 //1
+#define NUM_FU_MUL 2
+#define NUM_FU_DIV 2
+#define NUM_FU_SUB 1
+#define NUM_FU_ADD 1
 
 #define C_ADD 2
 #define C_AND 1
@@ -37,7 +37,6 @@
 #define C_MADD 14
 #define C_MSUB 14
 
-
 #define HI_REG 32
 #define LO_REG 33
 
@@ -49,7 +48,7 @@ typedef struct register_data register_data_t;
 /**
  * Scoreboarding funciontal unit structure
  */
-struct functional_unit{
+struct functional_unit {
     instruction_data_t *instruction;
     int busy;
     int op;
@@ -60,10 +59,14 @@ struct functional_unit{
     int cicles_to_end;
 };
 
-enum register_status{FREE, USED, BYPASS};
-enum register_access{READ, WRITE};
+enum register_status {
+    FREE, USED, BYPASS
+};
+enum register_access {
+    READ, WRITE
+};
 
-struct register_data{
+struct register_data {
     enum register_status status;
     rob_entry_t *entry;
 };

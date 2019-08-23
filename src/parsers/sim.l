@@ -13,7 +13,7 @@
   #include "src/parsers/include/parser.h"
   #include "sim.tab.h"
 
-//  int yylineno = 1;
+  int yylineno = 1;
   int yyleng = 0;
 
   void lexicalError(char *s);

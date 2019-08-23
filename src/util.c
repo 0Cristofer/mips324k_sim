@@ -5,10 +5,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "include/util.h"
 
-void initArgs(args_t* args) {
+FILE *out_file;
+
+void initArgs(args_t *args) {
     args->help = 0;
     args->input_name = NULL;
     args->binary_output_name = NULL;
@@ -16,16 +19,16 @@ void initArgs(args_t* args) {
     args->debug = 0;
 }
 
-int readArgs(args_t* args, int argc, char** argv) {
+int readArgs(args_t *args, int argc, char **argv) {
     int opt, ok = 1;
 
     struct option long_options[] = {
-            {"help",    no_argument, NULL, 'h'},
-            {"input", required_argument, NULL, 'i'},
+            {"help",   no_argument,       NULL, 'h'},
+            {"input",  required_argument, NULL, 'i'},
             {"output", required_argument, NULL, 'o'},
-            {"detail", no_argument, NULL, 'd'},
-            {"debug", no_argument, NULL, 'b'},
-            {NULL, 0, NULL, 0}
+            {"detail", no_argument,       NULL, 'd'},
+            {"debug",  no_argument,       NULL, 'b'},
+            {NULL, 0,                     NULL, 0}
     };
 
     opterr = 0;
@@ -49,14 +52,14 @@ int readArgs(args_t* args, int argc, char** argv) {
                 args->debug = 1;
                 break;
             case '?':
-                printf("Unknown option: \"%s\", use '-h' for help. Aborting.", argv[optind-1]);
+                printf("Unknown option: \"%s\", use '-h' for help. Aborting.", argv[optind - 1]);
                 ok = 0;
             default:
                 break;
         }
     }
 
-    if((args->input_name == NULL) && (!args->help) && ok) {
+    if ((args->input_name == NULL) && (!args->help) && ok) {
         printf("No input file, stopping run.\n");
         ok = 0;
     }
@@ -64,18 +67,18 @@ int readArgs(args_t* args, int argc, char** argv) {
     return ok;
 }
 
-char *getFileName(char *filename){
+char *getFileName(const char *filename) {
     char c, *name;
     int start = 0, end, i = 0;
 
     c = filename[0];
 
-    while (c != '\0'){
+    while (c != '\0') {
         if (c == '.')
             break;
 
         if (c == '/')
-            start = i+1;
+            start = i + 1;
 
         i++;
         c = filename[i];
@@ -83,19 +86,41 @@ char *getFileName(char *filename){
 
     end = i;
 
-    name = malloc(end-start+1 * sizeof(char));
+    name = malloc(end - start + 1 * sizeof(char));
 
-    for(i = 0; i < end-start; i++){
-        name[i] = filename[i+start];
+    for (i = 0; i < end - start; i++) {
+        name[i] = filename[i + start];
     }
-    name[end-start] = '\0';
+    name[end - start] = '\0';
 
     return name;
 }
 
+void startOutFile(char *prog_name) {
+    char *name;
+
+    name = malloc((strlen(prog_name) + 5) * sizeof(char));
+    name[0] = '\0';
+    name = strcat(name, prog_name);
+    name = strcat(name, ".out");
+
+    out_file = fopen(name, "w");
+
+    if (out_file == NULL) {
+        printf("Não foi possível criar arquivo de saída, escrevendo na saída padrão.\n");
+        out_file = stdin;
+    }
+
+    free(name);
+}
+
+void endOutFile() {
+    if (out_file != stdin) fclose(out_file);
+}
+
 void writeBinary(char *binary_ouput_name, int total_instructions, unsigned int *prog_mem) {
     int i;
-    FILE* output_b;
+    FILE *output_b;
 
     output_b = fopen(binary_ouput_name, "w");
 
@@ -104,33 +129,41 @@ void writeBinary(char *binary_ouput_name, int total_instructions, unsigned int *
         return;
     }
 
-    for(i = 0; i < total_instructions; i++) {
+    for (i = 0; i < total_instructions; i++) {
         fprintf(output_b, "%X\n", prog_mem[i]);
     }
 
     fclose(output_b);
 }
 
-void writeProg(int total_instructions, char **inst_strs) {
-    int i;
-    printf("Programa:\n");
+void writeProgramToOutput(char *input_name) {
+    char *line = NULL;
+    size_t len = 0;
+    FILE *input_file;
 
-    for (i = 0; i < total_instructions ; ++i) {
-        printf("\t%s\n", inst_strs[i]);
+    input_file = fopen(input_name, "r");
+
+    fprintf(out_file, "Programa:\n");
+
+    while (getline(&line, &len, input_file) != -1) {
+        fprintf(out_file, "\t%s", line);
     }
 
-    printf("\n");
+    fprintf(out_file, "\n\n");
+
+    free(line);
+    fclose(input_file);
 }
 
-void writeHexa(int total_instructions, unsigned int *insts) {
+void writeBinaryToOutput(int total_instructions, unsigned int *insts) {
     int i;
-    printf("Binário:\n");
+    fprintf(out_file, "Binário:\n");
 
     for (i = 0; i < total_instructions; ++i) {
-        printf("\t%X\n", insts[i]);
+        fprintf(out_file, "\t%X\n", insts[i]);
     }
 
-    printf("\n");
+    fprintf(out_file, "\n");
 }
 
 void printHelp() {
@@ -140,5 +173,6 @@ void printHelp() {
     printf("\t-i (--input) The MIPS32 4K assembly program to be simulated\n");
     printf("\t-o (--output) The binary program simulated\n");
     printf("\t-d (--detail) Generates detailed output\n");
+    printf("\t-b (--debug) Shows debug messages\n");
     printf("\t-h (--help) Shows this message\n");
 }

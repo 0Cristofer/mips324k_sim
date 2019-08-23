@@ -12,7 +12,7 @@ typedef struct instruction_data instruction_data_t;
 /**
  * Linked list main structure. Elements are always added to the head of the list
  */
-struct linked_list{
+struct linked_list {
     instruction_data_t *data;
     linked_list_t *next;
 };
